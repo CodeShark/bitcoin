@@ -1,0 +1,230 @@
+#!/bin/bash
+
+# TODO: Make the check granular down to distro and version
+function check_system {
+    [ "$MACHINE" ] || MACHINE=`(uname -m) 2>/dev/null` || MACHINE="unknown"
+    [ "$RELEASE" ] || RELEASE=`(uname -r) 2>/dev/null` || RELEASE="unknown"
+    [ "$SYSTEM" ] || SYSTEM=`(uname -s) 2>/dev/null`  || SYSTEM="unknown"
+    [ "$VERSION" ] || VERSION=`(uname -v) 2>/dev/null` || VERSION="unknown"
+
+    case $SYSTEM in
+        Linux)
+            echo "Linux detected."
+            PACKAGEMGRCMD="sudo apt-get install"
+            SEDCMD="sed -i"
+            MAKEFILE=makefile.unix
+            CXX=g++
+            LIBPATHS=
+            BDB_LIB_SUFFIX=
+            BOOST_LIB_SUFFIX=
+            USE_UPNP=1
+            BUILDREQ="build-essential"
+            BOOSTPKG="libboost-all-dev"
+            SSLPKG="libssl-dev"
+            BDBPKG="libdb5.1-dev libdb5.1++-dev"
+            UPNPPKG="libminiupnpc-dev"
+            ZLIBPKG="zlib"
+            ;;
+        Darwin)
+            echo "OS X detected."
+            PACKAGEMGRCMD="sudo port install"
+            SEDCMD="sed -i .bak"
+            MAKEFILE=makefile.osx
+            CXX=llvm-g++
+            DEPSDIR=/opt/local
+            LIBPATHS='-L/opt/local/lib -L/opt/local/lib/db48'
+            BDB_LIB_SUFFIX=-4.8
+            BOOST_LIB_SUFFIX=-mt
+            USE_UPNP=1
+            BUILDREQ=
+            BOOSTPKG="boost"
+            SSLPKG="openssl"
+            BDBPKG="db48"
+            UPNPPKG="miniupnpc"
+            ZLIBPKG="zlib"
+            ;;
+        *)
+            echo "Unrecognized system."
+            error_exit 1
+            ;;
+    esac
+}
+
+function success_exit {
+    echo
+    echo "Configuration successful!"
+    echo "Run make to build."
+    echo
+    exit 0
+}
+
+function error_exit {
+    echo
+    echo "Please fix errors and then run configure again."
+    echo
+    exit $1
+}
+
+function missing_pkgs_help {
+    echo
+    echo "You're missing some packages."
+    OLDIFS="$IFS"; IFS=$'\n'
+    PKGS=(`for pkg in "${MISSINGPKGS[@]}"; do echo "$pkg"; done | sort -du`)
+    IFS="$OLDIFS"
+    INSTALLCMD="$PACKAGEMGRCMD"
+    for pkg in "${PKGS[@]}"; do INSTALLCMD+=" \$$pkg"; done
+    echo
+    echo "To install the packages, run the following command:"
+    echo -ne "  "
+    eval echo "$INSTALLCMD"
+}
+
+function check_headers {
+    echo "#include <iostream>" > __h_test.cpp
+    CXXPROG="int main() { std::cout"
+    i=0;
+    for var; do
+        case $i in
+            0) INCS=$var; i=1; j=1;;
+            1) ((j++)); if [ "$var" == "v" ]; then i=2; else echo "#include <$var>" >> __h_test.cpp; fi;;
+            2) CXXPROG="$CXXPROG << $var << std::endl";;
+        esac
+    done
+    CXXPROG="$CXXPROG; return 0; }"
+    echo "$CXXPROG" >> __h_test.cpp
+    `$CXX -o __h_test __h_test.cpp $INCS > /dev/null 2>&1` || return 1
+    local OLDIFS="$IFS"; IFS=$'\n'; vers=( $(./__h_test) ); IFS="$OLDIFS"
+    rm __h_test.cpp __h_test
+    i=1; for ver in "${vers[@]}"; do k=$(($i+$j)); eval local _lver=\$$k; local lver="$ver"; eval $_lver="'$lver'"; ((i++)); done
+    return 0
+}
+
+function check_bdb_headers {
+    # try each version starting with the most recent
+    DB_DIRS=(db51 db50 db49 db48 db47 db46)
+    for db_dir in "${DB_DIRS[@]}"
+    do
+        if ! check_headers -I$DEPSDIR/include/$db_dir db.h v DB_VERSION_MAJOR DB_VERSION_MINOR DB_VERSION_PATCH DB_VERSION_STRING; then continue; fi
+        return 0
+    done
+    MISSINGPKGS+=("BDBPKG")
+    return 1
+}
+
+function check_lib {
+    echo -ne "    $1: "
+    echo "int main() { return 0; }" > __deptest.cpp
+    `$CXX -o __deptest __deptest.cpp $LIBPATHS $1 > /dev/null 2>&1` || { rm __deptest.cpp; echo "<---- NOT FOUND"; return 1; }
+    rm __deptest.cpp __deptest
+    echo "OK"
+    return 0
+}
+
+function create_makefile {
+    cp $MAKEFILE Makefile
+    eval "$SEDCMD s/^USE_UPNP:=.$/USE_UPNP:=$USE_UPNP/g Makefile"
+    echo "done."
+}
+
+###############################
+#
+# MAIN SCRIPT BEGINS HERE
+#
+echo
+echo -ne "Detecting system..."
+check_system
+
+MISSINGPKGS=()
+
+#
+# LIBRARY DEPENDENCIES
+#
+echo
+echo "Searching for libraries..."
+
+echo "  Boost:"
+if ! check_lib -lboost_system$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib -lboost_filesystem$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib -lboost_program_options$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib -lboost_thread$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib -lboost_regex$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+
+echo "  OpenSSL:"
+if ! check_lib -lssl; then MISSINGPKGS+=("SSLPKG"); fi
+if ! check_lib -lcrypto; then MISSINGPKGS+=("SSLPKG"); fi
+
+echo "  BDB:"
+if ! check_lib -ldb_cxx$BDB_LIB_SUFFIX; then MISSINGPKGS+=("BDBPKG"); fi
+
+echo "  zlib:"
+if ! check_lib -lz; then MISSINGPKGS+=("ZLIBPKG"); fi
+
+echo "  UPNP:"
+if ! check_lib -lminiupnpc; then USE_UPNP=-; fi
+
+#
+# HEADER DEPENDENCIES
+#
+echo
+echo "Searching for headers..."
+
+#Boost
+echo -ne "  Boost: "
+if ! check_headers -I$DEPSDIR/include boost/version.hpp v BOOST_LIB_VERSION BOOST_VERSION
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("BOOSTPKG")
+else
+    echo "$BOOST_LIB_VERSION"
+fi
+
+#OpenSSL
+echo -ne "  OpenSSL: "
+if ! check_headers -I$DEPSDIR/include openssl/opensslv.h v OPENSSL_VERSION_TEXT OPENSSL_VERSION_NUMBER;
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("SSLPKG")
+else
+    echo "$OPENSSL_VERSION_TEXT"
+fi
+
+#Berkeley DB
+echo -ne "  BDB: "
+if ! check_bdb_headers;
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("BDBPKG")
+else
+    echo "$DB_VERSION_STRING"
+fi
+
+#zlib
+echo -ne "  zlib: "
+if ! check_headers -I$DEPSDIR/include zlib.h v ZLIB_VERNUM ZLIB_VERSION;
+then
+    echo "<---- NOT FOUND"
+    MISSINGPKGS+=("ZLIBPKG")
+else
+    echo "$ZLIB_VERSION"
+fi
+
+#miniupnpc
+echo -ne "  miniupnpc: "
+if ! check_headers -I$DEPSDIR/include miniupnpc/miniupnpc.h
+then
+    echo "<---- NOT FOUND"
+    USE_UPNP=-
+else
+    echo "Found"
+fi
+
+if [[ ${#MISSINGPKGS[@]} -ne 0 ]]; then { missing_pkgs_help; error_exit 1; }; fi
+
+echo
+if [[ "$USE_UPNP" == "1" ]]; then echo "miniupnpc enabled."; else echo "miniupnpc disabled."; fi
+
+echo
+echo -ne "Creating Makefile..."
+create_makefile
+
+success_exit
