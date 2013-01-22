@@ -169,8 +169,11 @@ echo
 echo "Searching for headers..."
 
 #Boost
+# a full list of headers used in project can be obtained with the following command:
+#  { HEADERS=(`grep "#include <boost" * -r -n | sed -e "s/^.*<\(boost[^>]*\).*$/\\1/g" | sort -du`); for header in "${HEADERS[@]}"; do echo -ne " $header"; done; echo; }
+BOOSTHEADERS="boost/version.hpp"
 echo -ne "  Boost: "
-if ! check_headers -I$DEPSDIR/include boost/version.hpp v BOOST_LIB_VERSION BOOST_VERSION
+if ! check_headers -I$DEPSDIR/include $BOOSTHEADERS v BOOST_LIB_VERSION BOOST_VERSION
 then
     echo "<---- NOT FOUND"
     MISSINGPKGS+=("BOOSTPKG")
