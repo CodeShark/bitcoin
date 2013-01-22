@@ -27,6 +27,7 @@ function check_system {
             ;;
         Darwin)
             echo "OS X detected."
+            `port search twig > /dev/null 2>&1` || echo "WARNING: It appears you do not have MacPorts installed. You will need to install it to get any missing packages. (http://www.macports.org/)"
             PACKAGEMGRCMD="sudo port install"
             SEDCMD="sed -i .bak"
             MAKEFILE=makefile.osx
