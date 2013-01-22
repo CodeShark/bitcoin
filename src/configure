@@ -1,15 +1,25 @@
 #!/bin/bash
 
+function check_linux_details {
+    DISTRIB_ID=`lsb_release -i | sed -e "s/^.*:\s//g"`
+    DESCRIPTION=`lsb_release -d | sed -e "s/^.*:\s//g"`
+    RELEASE=`lsb_release -r | sed -e "s/^.*:\s//g"`
+    CODENAME=`lsb_release -c | sed -e "s/^.*:\s//g"`
+}
+
 # TODO: Make the check granular down to distro and version
 function check_system {
     [ "$MACHINE" ] || MACHINE=`(uname -m) 2>/dev/null` || MACHINE="unknown"
-    [ "$RELEASE" ] || RELEASE=`(uname -r) 2>/dev/null` || RELEASE="unknown"
+#    [ "$RELEASE" ] || RELEASE=`(uname -r) 2>/dev/null` || RELEASE="unknown"
     [ "$SYSTEM" ] || SYSTEM=`(uname -s) 2>/dev/null`  || SYSTEM="unknown"
-    [ "$VERSION" ] || VERSION=`(uname -v) 2>/dev/null` || VERSION="unknown"
+#    [ "$VERSION" ] || VERSION=`(uname -v) 2>/dev/null` || VERSION="unknown"
 
     case $SYSTEM in
         Linux)
             echo "Linux detected."
+            check_linux_details
+            echo "$DESCRIPTION"
+
             PACKAGEMGRCMD="sudo apt-get install"
             SEDCMD="sed -i"
             MAKEFILE=makefile.unix
@@ -27,6 +37,10 @@ function check_system {
             ;;
         Darwin)
             echo "OS X detected."
+
+            RELEASE=`sw_vers | grep 'ProductVersion:' | grep -o '[0-9]*\.[0-9]*\.[0-9]*'`
+            echo "Version: $RELEASE"
+
             `port search twig > /dev/null 2>&1` || echo "WARNING: It appears you do not have MacPorts installed. You will need to install it to get any missing packages. (http://www.macports.org/)"
             PACKAGEMGRCMD="sudo port install"
             SEDCMD="sed -i .bak"
