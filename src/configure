@@ -131,7 +131,7 @@ function create_makefile {
 
 function check_bdb_dir {
     # try each version starting with the most recent
-    BDB_DIRS=(db51 db50 db49 db48 db47 db46)
+    BDB_DIRS=(db51 db5.1 db50 db5.0 db49 db4.9 db48 db4.8 db47 db4.7 db46 db4.6)
     for dir in "${BDB_DIRS[@]}"
     do
         if [ ! -d "$DEPSDIR/include/$dir" ]; then continue; fi
