@@ -99,18 +99,6 @@ function check_headers {
     return 0
 }
 
-function check_bdb_headers {
-    # try each version starting with the most recent
-    DB_DIRS=(db51 db50 db49 db48 db47 db46)
-    for db_dir in "${DB_DIRS[@]}"
-    do
-        if ! check_headers -I$DEPSDIR/include/$db_dir db.h v DB_VERSION_MAJOR DB_VERSION_MINOR DB_VERSION_PATCH DB_VERSION_STRING; then continue; fi
-        return 0
-    done
-    MISSINGPKGS+=("BDBPKG")
-    return 1
-}
-
 function check_lib {
     echo -ne "    $1: "
     echo "int main() { return 0; }" > __deptest.cpp
@@ -124,6 +112,18 @@ function create_makefile {
     cp $MAKEFILE Makefile
     eval "$SEDCMD s/^USE_UPNP:=.$/USE_UPNP:=$USE_UPNP/g Makefile"
     echo "done."
+}
+
+function check_bdb_dir {
+    # try each version starting with the most recent
+    BDB_DIRS=(db51 db50 db49 db48 db47 db46)
+    for dir in "${BDB_DIRS[@]}"
+    do
+        if [ ! -d "$DEPSDIR/include/$dir" ]; then continue; fi
+        BDB_DIR="$dir"
+        return 0
+    done
+    return 1
 }
 
 ###############################
@@ -183,7 +183,7 @@ fi
 
 #OpenSSL
 echo -ne "  OpenSSL: "
-if ! check_headers -I$DEPSDIR/include openssl/opensslv.h v OPENSSL_VERSION_TEXT OPENSSL_VERSION_NUMBER;
+if ! check_headers -I$DEPSDIR/include openssl/opensslv.h v OPENSSL_VERSION_TEXT OPENSSL_VERSION_NUMBER
 then
     echo "<---- NOT FOUND"
     MISSINGPKGS+=("SSLPKG")
@@ -193,7 +193,8 @@ fi
 
 #Berkeley DB
 echo -ne "  BDB: "
-if ! check_bdb_headers;
+check_bdb_dir
+if ! check_headers -I$DEPSDIR/include/$BDB_DIR db.h v DB_VERSION_MAJOR DB_VERSION_MINOR DB_VERSION_PATCH DB_VERSION_STRING
 then
     echo "<---- NOT FOUND"
     MISSINGPKGS+=("BDBPKG")
@@ -203,7 +204,7 @@ fi
 
 #zlib
 echo -ne "  zlib: "
-if ! check_headers -I$DEPSDIR/include zlib.h v ZLIB_VERNUM ZLIB_VERSION;
+if ! check_headers -I$DEPSDIR/include zlib.h v ZLIB_VERNUM ZLIB_VERSION
 then
     echo "<---- NOT FOUND"
     MISSINGPKGS+=("ZLIBPKG")
