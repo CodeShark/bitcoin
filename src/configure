@@ -214,7 +214,12 @@ then
     echo "<---- NOT FOUND"
     MISSINGPKGS+=("BDBPKG")
 else
+    DB_VERSION_INT=$((DB_VERSION_MAJOR*256*256 + DB_VERSION_MINOR*256 + DB_VERSION_PATCH))
     echo "$DB_VERSION_STRING"
+# less than version 4.8
+    if [ "$DB_VERSION_INT" -lt "264192" ]; then echo "   - ERROR: You need BDB version 4.8 or higher."; MISSINGPKGS+=("BDBPKG"); fi
+# version 4.9 or greater
+    if [ "$DB_VERSION_INT" -ge "264448" ]; then echo "   - WARNING: Wallets might not be compatible with other clients. BDB version 4.8 is recommended."; fi
 fi
 
 #zlib
