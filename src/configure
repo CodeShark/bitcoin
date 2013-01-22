@@ -1,10 +1,10 @@
 #!/bin/bash
 
 function check_linux_details {
-    DISTRIB_ID=`lsb_release -i | sed -e "s/^.*:\s//g"`
-    DESCRIPTION=`lsb_release -d | sed -e "s/^.*:\s//g"`
-    RELEASE=`lsb_release -r | sed -e "s/^.*:\s//g"`
-    CODENAME=`lsb_release -c | sed -e "s/^.*:\s//g"`
+    DISTRIB_ID=`lsb_release -i 2>/dev/null | sed -e "s/^.*:\s//g"` || DISTRIB_ID="unknown"
+    DESCRIPTION=`lsb_release -d 2>/dev/null | sed -e "s/^.*:\s//g"` || DESCRIPTION="unknown"
+    RELEASE=`lsb_release -r 2>/dev/null | sed -e "s/^.*:\s//g"` || RELEASE="unknown"
+    CODENAME=`lsb_release -c 2>/dev/null | sed -e "s/^.*:\s//g"` || CODENAME="unknown"
 }
 
 # TODO: Make the check granular down to distro and version
