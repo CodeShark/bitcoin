@@ -24,7 +24,9 @@ function check_system {
             SEDCMD="sed -i"
             MAKEFILE=makefile.unix
             CXX=g++
-            LIBPATHS=
+            DEPSDIR="/usr"
+            ESCDEPSDIR='\/usr'
+            LIBPATHS="-L/usr/lib"
             BDB_LIB_SUFFIX=
             BOOST_LIB_SUFFIX=
             USE_UPNP=1
@@ -46,8 +48,9 @@ function check_system {
             SEDCMD="sed -i .bak"
             MAKEFILE=makefile.osx
             CXX=llvm-g++
-            DEPSDIR=/opt/local
-            LIBPATHS='-L/opt/local/lib -L/opt/local/lib/db48'
+            DEPSDIR="/opt/local"
+            ESCDEPSDIR='\/opt\/local'
+            LIBPATHS="-L$DEPSDIR/lib"
             BDB_LIB_SUFFIX=-4.8
             BOOST_LIB_SUFFIX=-mt
             USE_UPNP=1
@@ -115,18 +118,22 @@ function check_headers {
 }
 
 function check_lib {
-    echo -ne "    $1: "
+    local LPATHS=''
+    local LIBS=''
+    local i=0
+    for var; do
+        if [ "$var" == "l" ]; then i=1; continue; fi
+        case $i in
+            0) LPATHS+="$var ";;
+            1) LIBS+="$var ";;
+        esac
+    done
+    echo -ne "    $LIBS: "
     echo "int main() { return 0; }" > __deptest.cpp
-    `$CXX -o __deptest __deptest.cpp $LIBPATHS $1 > /dev/null 2>&1` || { rm __deptest.cpp; echo "<---- NOT FOUND"; return 1; }
+    `$CXX -o __deptest __deptest.cpp $LPATHS $LIBS > /dev/null 2>&1` || { rm __deptest.cpp; echo "<---- NOT FOUND"; return 1; }
     rm __deptest.cpp __deptest
     echo "OK"
     return 0
-}
-
-function create_makefile {
-    cp $MAKEFILE Makefile
-    eval "$SEDCMD s/^USE_UPNP:=.$/USE_UPNP:=$USE_UPNP/g Makefile"
-    echo "done."
 }
 
 function check_bdb_dir {
@@ -139,6 +146,13 @@ function check_bdb_dir {
         return 0
     done
     return 1
+}
+
+function create_makefile {
+    cp $MAKEFILE Makefile
+    eval "$SEDCMD s/^USE_UPNP:=.$/USE_UPNP:=$USE_UPNP/g Makefile"
+    if [ -n "$BDB_DIR" ]; then eval "$SEDCMD \"s/^DEFS=\(.*\)$/DEFS=-I$ESCDEPSDIR\/include\/$BDB_DIR \1/g\" Makefile"; fi
+    echo "done."
 }
 
 ###############################
@@ -158,24 +172,25 @@ echo
 echo "Searching for libraries..."
 
 echo "  Boost:"
-if ! check_lib -lboost_system$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
-if ! check_lib -lboost_filesystem$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
-if ! check_lib -lboost_program_options$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
-if ! check_lib -lboost_thread$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
-if ! check_lib -lboost_regex$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_system$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_filesystem$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_program_options$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_thread$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
+if ! check_lib $LIBPATHS l -lboost_regex$BOOST_LIB_SUFFIX; then MISSINGPKGS+=("BOOSTPKG"); fi
 
 echo "  OpenSSL:"
-if ! check_lib -lssl; then MISSINGPKGS+=("SSLPKG"); fi
-if ! check_lib -lcrypto; then MISSINGPKGS+=("SSLPKG"); fi
+if ! check_lib $LIBPATHS l -lssl; then MISSINGPKGS+=("SSLPKG"); fi
+if ! check_lib $LIBPATHS l -lcrypto; then MISSINGPKGS+=("SSLPKG"); fi
 
 echo "  BDB:"
-if ! check_lib -ldb_cxx$BDB_LIB_SUFFIX; then MISSINGPKGS+=("BDBPKG"); fi
+if check_bdb_dir; then LIBPATHS="$LIBPATHS $LIBPATHS/$BDB_DIR"; fi
+if ! check_lib $LIBPATHS l -ldb_cxx$BDB_LIB_SUFFIX; then MISSINGPKGS+=("BDBPKG"); fi
 
 echo "  zlib:"
-if ! check_lib -lz; then MISSINGPKGS+=("ZLIBPKG"); fi
+if ! check_lib $LIBPATHS l -lz; then MISSINGPKGS+=("ZLIBPKG"); fi
 
 echo "  UPNP:"
-if ! check_lib -lminiupnpc; then USE_UPNP=-; fi
+if ! check_lib $LIBPATHS l -lminiupnpc; then USE_UPNP=-; fi
 
 #
 # HEADER DEPENDENCIES
@@ -208,7 +223,6 @@ fi
 
 #Berkeley DB
 echo -ne "  BDB: "
-check_bdb_dir
 if ! check_headers -I$DEPSDIR/include/$BDB_DIR db.h v DB_VERSION_MAJOR DB_VERSION_MINOR DB_VERSION_PATCH DB_VERSION_STRING
 then
     echo "<---- NOT FOUND"
