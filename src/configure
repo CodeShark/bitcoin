@@ -1,26 +1,62 @@
 #!/bin/bash
 
 function check_linux_details {
-    DISTRIB_ID=`lsb_release -i 2>/dev/null | sed -e "s/^.*:\s//g"` || DISTRIB_ID="unknown"
-    DESCRIPTION=`lsb_release -d 2>/dev/null | sed -e "s/^.*:\s//g"` || DESCRIPTION="unknown"
-    RELEASE=`lsb_release -r 2>/dev/null | sed -e "s/^.*:\s//g"` || RELEASE="unknown"
-    CODENAME=`lsb_release -c 2>/dev/null | sed -e "s/^.*:\s//g"` || CODENAME="unknown"
+    DISTRIB_ID=`lsb_release -i 2>/dev/null | sed -e "s/^.*:\s//g"`
+    DESCRIPTION=`lsb_release -d 2>/dev/null | sed -e "s/^.*:\s//g"`
+    RELEASE=`lsb_release -r 2>/dev/null | sed -e "s/^.*:\s//g"`
+    CODENAME=`lsb_release -c 2>/dev/null | sed -e "s/^.*:\s//g"`
+
+    if [ "${#DESCRIPTION}" -eq "0" ]; then DESCRIPTION=`cat /etc/*-release 2>/dev/null` || DESCRIPTION="unknown"; fi
+    if [[ "$DESCRIPTION" =~ "Gentoo" ]]; then DISTRIB_ID="Gentoo"; fi
+}
+
+function check_linux_packages {
+    case $DISTRIB_ID in
+        Ubuntu)
+            PACKAGEMGRCMD="sudo apt-get install"
+            BUILDREQ="build-essential"
+            BOOSTPKG="libboost-all-dev"
+            SSLPKG="libssl-dev"
+            if [[ $CODENAME == "precise" ]]
+            then
+                BDBPKG="libdb5.1-dev libdb5.1++-dev"
+            else
+                BDBPKG="libdb4.8-dev libdb4.8++-dev"
+            fi
+            UPNPPKG="libminiupnpc-dev"
+            ZLIBPKG="zlib"
+            ;;
+        Debian)
+            PACKAGEMGRCMD="sudo apt-get install"
+            BUILDREQ="build-essential"
+            BOOSTPKG="libboost-all-dev"
+            SSLPKG="libssl-dev"
+            BDBPKG="libdb4.8-dev libdb4.8++-dev"
+            UPNPPKG="libminiupnpc-dev"
+            ZLIBPKG="zlib"
+            ;;
+        Gentoo)
+            PACKAGEMGRCMD="sudo emerge -av1 --noreplace"
+            BOOSTPKG="boost"
+            SSLPKG="openssl"
+            BDBPKG="sys-libs/db:4.8"
+            UPNPPKG="net-libs/miniupnpc"
+            ZLIBPKG="sys-libs/zlib"
+            ;;
+    esac
 }
 
 # TODO: Make the check granular down to distro and version
 function check_system {
     [ "$MACHINE" ] || MACHINE=`(uname -m) 2>/dev/null` || MACHINE="unknown"
-#    [ "$RELEASE" ] || RELEASE=`(uname -r) 2>/dev/null` || RELEASE="unknown"
     [ "$SYSTEM" ] || SYSTEM=`(uname -s) 2>/dev/null`  || SYSTEM="unknown"
-#    [ "$VERSION" ] || VERSION=`(uname -v) 2>/dev/null` || VERSION="unknown"
 
     case $SYSTEM in
         Linux)
             echo "Linux detected."
             check_linux_details
-            echo "$DESCRIPTION"
+            echo "Distribution: $DESCRIPTION"
 
-            PACKAGEMGRCMD="sudo apt-get install"
             SEDCMD="sed -i"
             MAKEFILE=makefile.unix
             CXX=g++
@@ -30,12 +66,7 @@ function check_system {
             BDB_LIB_SUFFIX=
             BOOST_LIB_SUFFIX=
             USE_UPNP=1
-            BUILDREQ="build-essential"
-            BOOSTPKG="libboost-all-dev"
-            SSLPKG="libssl-dev"
-            BDBPKG="libdb5.1-dev libdb5.1++-dev"
-            UPNPPKG="libminiupnpc-dev"
-            ZLIBPKG="zlib"
+            check_linux_packages
             ;;
         Darwin)
             echo "OS X detected."
@@ -45,7 +76,6 @@ function check_system {
 
             `port search twig > /dev/null 2>&1` || echo "WARNING: It appears you do not have MacPorts installed. You will need to install it to get any missing packages. (http://www.macports.org/)"
             PACKAGEMGRCMD="sudo port install"
-            SEDCMD="sed -i .bak"
             MAKEFILE=makefile.osx
             CXX=llvm-g++
             DEPSDIR="/opt/local"
@@ -54,6 +84,7 @@ function check_system {
             BDB_LIB_SUFFIX=-4.8
             BOOST_LIB_SUFFIX=-mt
             USE_UPNP=1
+            SEDCMD="sed -i .bak"
             BUILDREQ=
             BOOSTPKG="boost"
             SSLPKG="openssl"
@@ -86,6 +117,7 @@ function error_exit {
 function missing_pkgs_help {
     echo
     echo "You're missing some packages."
+    if [ "${#PACKAGEMGRCMD}" -eq "0" ]; then return; fi
     OLDIFS="$IFS"; IFS=$'\n'
     PKGS=(`for pkg in "${MISSINGPKGS[@]}"; do echo "$pkg"; done | sort -du`)
     IFS="$OLDIFS"
