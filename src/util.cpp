@@ -140,7 +140,27 @@ public:
 instance_of_cinit;
 
 
+// The following three functions have hardcoded return values. These values should be configurable from config file.
+int64_t GetFirstReward()
+{
+    // TODO: Make the type size platform-independent
+    //return strtoull(GetArg("-firstreward", "50").c_str(), 0, NULL);
+    return 50;
+}
 
+int64_t GetCoin()
+{
+    // TODO: Make the type size platform-independent
+    //return strtoull(GetArg("-coinvalue", "100000000").c_str(), 0, NULL);
+    return 100000000;
+} 
+
+int64_t GetCent()
+{
+    // TODO: Make the type size platform-independent
+    //return GetCoin() / 100;
+    return 1000000;
+}
 
 
 
@@ -1023,6 +1043,15 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     strMiscWarning = message;
 }
 
+std::string GetCoinName(bool lowercase)
+{
+    std::string name(GetArg("-coinname", "Bitcoin"));
+    if (lowercase) {
+        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+    }
+    return name;
+}
+
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
@@ -1032,7 +1061,7 @@ boost::filesystem::path GetDefaultDataDir()
     // Unix: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / GetCoinName();
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -1044,10 +1073,12 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     fs::create_directory(pathRet);
-    return pathRet / "Bitcoin";
+    return pathRet / GetCoinName();
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    std::string dirname(".");
+    dirname += GetCoinName(true);
+    return pathRet / dirname;
 #endif
 #endif
 }
@@ -1096,7 +1127,8 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+    std::string filename = GetCoinName(true) + ".conf";
+    boost::filesystem::path pathConfigFile(filename);
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }

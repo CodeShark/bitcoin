@@ -99,19 +99,20 @@ unsigned int pnSeed[] =
 
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    void init() {
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
-        nDefaultPort = 8333;
-        nRPCPort = 8332;
+        uint32_t messageStart = strtoul(GetArg("-mainnet_magicbytes", "0xd9b4bef9").c_str(), NULL, 0);
+        pchMessageStart[0] = messageStart & 0xff;           // default: 0xf9
+        pchMessageStart[1] = (messageStart >> 8) & 0xff;    // default: 0xbe
+        pchMessageStart[2] = (messageStart >> 16) & 0xff;   // default: 0xb4
+        pchMessageStart[3] = (messageStart >> 24) & 0xff;   // default: 0xd9
+        vAlertPubKey = ParseHex(GetArg("-mainnet_alertpubkey", "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284"));
+        nDefaultPort = strtoul(GetArg("-mainnet_port", "8333").c_str(), NULL, 0);
+        nRPCPort = strtoul(GetArg("-mainnet_rpcport", "8332").c_str(), NULL, 0);
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
-        nSubsidyHalvingInterval = 210000;
+        nSubsidyHalvingInterval = strtoul(GetArg("-mainnet_halvinginterval", "210000").c_str(), NULL, 0);
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -121,24 +122,25 @@ public:
         //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
         //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
         //   vMerkleTree: 4a5e1e
-        const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+        const char* pszTimestamp = GetArg("-mainnet_genesis_text", "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks").c_str();
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = 50 * COIN;
-        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+        txNew.vout[0].nValue = GetFirstReward() * GetCoin();
+        txNew.vout[0].scriptPubKey = CScript()
+            << ParseHex(GetArg("-mainnet_genesis_outscript", "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f")) << OP_CHECKSIG;
         genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
-        genesis.nVersion = 1;
-        genesis.nTime    = 1231006505;
-        genesis.nBits    = 0x1d00ffff;
-        genesis.nNonce   = 2083236893;
+        genesis.nVersion = strtoul(GetArg("-mainnet_genesis_version", "1").c_str(), NULL, 0);
+        genesis.nTime    = strtoul(GetArg("-mainnet_genesis_timestamp", "1231006505").c_str(), NULL, 0);
+        genesis.nBits    = strtoul(GetArg("-mainnet_genesis_bits", "0x1d00ffff").c_str(), NULL, 0);
+        genesis.nNonce   = strtoul(GetArg("-mainnet_genesis_nonce", "2083236893").c_str(), NULL, 0);
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
-        assert(genesis.hashMerkleRoot == uint256("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        assert(hashGenesisBlock == uint256(GetArg("-mainnet_genesis_hash", "0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
+        assert(genesis.hashMerkleRoot == uint256(GetArg("-mainnet_genesis_merkle", "0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")));
 
         vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
@@ -146,11 +148,13 @@ public:
         vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com"));
         vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(0);
-        base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
-        base58Prefixes[SECRET_KEY] =     list_of(128);
-        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E);
-        base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4);
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(strtoul(GetArg("-mainnet_pubkey_addr", "0").c_str(), NULL, 0));
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(strtoul(GetArg("-mainnet_script_addr", "5").c_str(), NULL, 0));
+        base58Prefixes[SECRET_KEY] =     list_of(strtoul(GetArg("-mainnet_private_key", "128").c_str(), NULL, 0));
+        uint32_t extPubKey = strtoul(GetArg("-mainnet_ext_pubkey", "0x0488b21e").c_str(), NULL, 0);
+        uint32_t extPrivKey = strtoul(GetArg("-mainnet_ext_privkey", "0x0488ade4").c_str(), NULL, 0);
+        base58Prefixes[EXT_PUBLIC_KEY] = list_of((extPubKey >> 24) & 0xff)((extPubKey >> 16) & 0xff)((extPubKey >> 8) & 0xff)(extPubKey & 0xff);
+        base58Prefixes[EXT_SECRET_KEY] = list_of((extPrivKey >> 24) & 0xff)((extPrivKey >> 16) & 0xff)((extPrivKey >> 8) & 0xff)(extPrivKey & 0xff);
 
         // Convert the pnSeeds array into usable address objects.
         for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
@@ -186,14 +190,15 @@ static CMainParams mainParams;
 //
 class CTestNetParams : public CMainParams {
 public:
-    CTestNetParams() {
+    void init() {
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
+        uint32_t messageStart = strtoull(GetArg("-testnet_magicbytes", "0x0709110b").c_str(), NULL, 0);
+        pchMessageStart[0] = messageStart & 0xff;           // default: 0x0b
+        pchMessageStart[1] = (messageStart >> 8) & 0xff;    // default: 0x11
+        pchMessageStart[2] = (messageStart >> 16) & 0xff;   // default: 0x09
+        pchMessageStart[3] = (messageStart >> 24) & 0xff;   // default: 0x07
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 18333;
         nRPCPort = 18332;
@@ -239,7 +244,7 @@ public:
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18444;
         strDataDir = "regtest";
-        assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
+        //assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }
@@ -251,7 +256,7 @@ static CRegTestParams regTestParams;
 
 static CChainParams *pCurrentParams = &mainParams;
 
-const CChainParams &Params() {
+CChainParams &Params() {
     return *pCurrentParams;
 }
 

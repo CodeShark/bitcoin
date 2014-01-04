@@ -35,8 +35,13 @@
 class CNetAddr;
 class uint256;
 
+// TODO: replace all instances of these constants with calls to the functions below
 static const int64_t COIN = 100000000;
 static const int64_t CENT = 1000000;
+
+int64_t GetFirstReward(); // default: 50
+int64_t GetCoin();        // default: 100000000
+int64_t GetCent();        // default:   1000000
 
 #define BEGIN(a)            ((char*)&(a))
 #define END(a)              ((char*)&((&(a))[1]))
@@ -180,6 +185,7 @@ bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
+std::string GetCoinName(bool lowercase = false);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 boost::filesystem::path GetConfigFile();
