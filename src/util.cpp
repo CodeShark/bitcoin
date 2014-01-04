@@ -140,7 +140,27 @@ public:
 instance_of_cinit;
 
 
+// The following three functions have hardcoded return values. These values should be configurable from config file.
+int64_t GetFirstReward()
+{
+    // TODO: Make the type size platform-independent
+    //return strtoull(GetArg("-firstreward", "50").c_str(), 0, NULL);
+    return 50;
+}
 
+int64_t GetCoin()
+{
+    // TODO: Make the type size platform-independent
+    //return strtoull(GetArg("-coinvalue", "100000000").c_str(), 0, NULL);
+    return 100000000;
+} 
+
+int64_t GetCent()
+{
+    // TODO: Make the type size platform-independent
+    //return GetCoin() / 100;
+    return 1000000;
+}
 
 
 
@@ -1107,7 +1127,7 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    std::string filename = GetCoinName(false) + ".conf";
+    std::string filename = GetCoinName(true) + ".conf";
     boost::filesystem::path pathConfigFile(filename);
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
