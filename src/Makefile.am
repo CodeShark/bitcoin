@@ -34,6 +34,7 @@ BITCOIN_CORE_H = \
   crypter.h \
   db.h \
   hash.h \
+  scrypt.h \
   init.h \
   key.h \
   keystore.h \
@@ -126,6 +127,7 @@ libbitcoin_common_a_SOURCES = \
   sync.cpp \
   util.cpp \
   version.cpp \
+  scrypt.cpp \
   $(BITCOIN_CORE_H)
 
 libbitcoin_cli_a_SOURCES = \

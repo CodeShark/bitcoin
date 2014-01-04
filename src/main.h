@@ -790,7 +790,12 @@ public:
 
     uint256 GetBlockHash() const
     {
-        return *phashBlock;
+        return GetBlockHeader().GetHash();
+    }
+
+    uint256 GetPoWHash() const
+    {
+        return GetBlockHeader().GetPoWHash();
     }
 
     int64_t GetBlockTime() const
@@ -809,7 +814,7 @@ public:
 
     bool CheckIndex() const
     {
-        return CheckProofOfWork(GetBlockHash(), nBits);
+        return CheckProofOfWork(GetPoWHash(), nBits);
     }
 
     enum { nMedianTimeSpan=11 };

@@ -11,6 +11,7 @@
 #include "util.h"
 
 #include <boost/assign/list_of.hpp>
+#include <iostream>
 
 using namespace boost::assign;
 
@@ -111,7 +112,7 @@ public:
         vAlertPubKey = ParseHex(GetArg("-mainnet_alertpubkey", "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284"));
         nDefaultPort = strtoul(GetArg("-mainnet_port", "8333").c_str(), NULL, 0);
         nRPCPort = strtoul(GetArg("-mainnet_rpcport", "8332").c_str(), NULL, 0);
-        bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
+        bnProofOfWorkLimit = CBigNum(~uint256(0) >> strtoul(GetArg("-mainnet_proofofworklimitexp", "32").c_str(), NULL, 0));
         nSubsidyHalvingInterval = strtoul(GetArg("-mainnet_halvinginterval", "210000").c_str(), NULL, 0);
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -123,13 +124,15 @@ public:
         //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
         //   vMerkleTree: 4a5e1e
         const char* pszTimestamp = GetArg("-mainnet_genesis_text", "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks").c_str();
+/*
+        std::cout << "pszTimestamp: " << pszTimestamp << std::endl;
+*/
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].nValue = GetFirstReward() * GetCoin();
-        txNew.vout[0].scriptPubKey = CScript()
-            << ParseHex(GetArg("-mainnet_genesis_outscript", "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f")) << OP_CHECKSIG;
+        txNew.vout[0].scriptPubKey = CScript() << ParseHex(GetArg("-mainnet_genesis_pubkey", "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f").c_str()) << OP_CHECKSIG;
         genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
@@ -138,6 +141,16 @@ public:
         genesis.nBits    = strtoul(GetArg("-mainnet_genesis_bits", "0x1d00ffff").c_str(), NULL, 0);
         genesis.nNonce   = strtoul(GetArg("-mainnet_genesis_nonce", "2083236893").c_str(), NULL, 0);
 
+/*
+        std::cout << "Raw block: " << std::endl;
+        // Get raw block string
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+        ssBlock << genesis;
+        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+        std::cout << strHex << std::endl;
+
+        genesis.print();
+*/
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256(GetArg("-mainnet_genesis_hash", "0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
         assert(genesis.hashMerkleRoot == uint256(GetArg("-mainnet_genesis_merkle", "0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")));
