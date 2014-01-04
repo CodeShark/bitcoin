@@ -11,6 +11,7 @@
 #include "util.h"
 
 #include <boost/assign/list_of.hpp>
+#include <iostream>
 
 using namespace boost::assign;
 
@@ -123,6 +124,7 @@ public:
         //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
         //   vMerkleTree: 4a5e1e
         const char* pszTimestamp = GetArg("-mainnet_genesis_text", "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks").c_str();
+        std::cout << "pszTimestamp: " << pszTimestamp << std::endl;
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -138,7 +140,9 @@ public:
         genesis.nBits    = strtoul(GetArg("-mainnet_genesis_bits", "0x1d00ffff").c_str(), NULL, 0);
         genesis.nNonce   = strtoul(GetArg("-mainnet_genesis_nonce", "2083236893").c_str(), NULL, 0);
 
-        hashGenesisBlock = genesis.GetPoWHash();
+        std::cout << "Raw block: " << std::endl;
+        genesis.print();
+        hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256(GetArg("-mainnet_genesis_hash", "0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
         assert(genesis.hashMerkleRoot == uint256(GetArg("-mainnet_genesis_merkle", "0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")));
 
