@@ -138,7 +138,7 @@ public:
         genesis.nBits    = strtoul(GetArg("-mainnet_genesis_bits", "0x1d00ffff").c_str(), NULL, 0);
         genesis.nNonce   = strtoul(GetArg("-mainnet_genesis_nonce", "2083236893").c_str(), NULL, 0);
 
-        hashGenesisBlock = genesis.GetHash();
+        hashGenesisBlock = genesis.GetPoWHash();
         assert(hashGenesisBlock == uint256(GetArg("-mainnet_genesis_hash", "0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
         assert(genesis.hashMerkleRoot == uint256(GetArg("-mainnet_genesis_merkle", "0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")));
 

@@ -22,7 +22,8 @@ BITCOIN_CORE_H = addrman.h alert.h allocators.h base58.h bignum.h \
   clientversion.h coincontrol.h compat.h core.h coins.h crypter.h db.h hash.h init.h \
   key.h keystore.h leveldbwrapper.h limitedmap.h main.h miner.h mruset.h \
   netbase.h net.h noui.h protocol.h script.h serialize.h sync.h threadsafety.h \
-  txdb.h txmempool.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h
+  txdb.h txmempool.h ui_interface.h uint256.h util.h version.h walletdb.h wallet.h \
+  scrypt.h
 
 JSON_H = json/json_spirit.h json/json_spirit_error_position.h \
   json/json_spirit_reader.h json/json_spirit_reader_template.h \
@@ -83,6 +84,7 @@ libbitcoin_common_a_SOURCES = \
   sync.cpp \
   util.cpp \
   version.cpp \
+  scrypt.cpp \
   $(BITCOIN_CORE_H)
 
 libbitcoin_cli_a_SOURCES = \

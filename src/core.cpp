@@ -7,6 +7,8 @@
 
 #include "util.h"
 
+#include "scrypt.h"
+
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10).c_str(), n);
@@ -214,7 +216,36 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
 
 uint256 CBlockHeader::GetHash() const
 {
-    return Hash(BEGIN(nVersion), END(nNonce));
+    // TODO: use function pointer, then later use dynamic linking
+    std::string headerhashfunc = GetArg("-headerhashfunc", "sha256_2");
+    if (headerhashfunc == "sha256_2") {
+        return Hash(BEGIN(nVersion), END(nNonce));
+    }
+    else if (headerhashfunc == "scrypt") {
+        uint256 thash;
+        scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
+        return thash;
+    }
+    else {
+        return uint256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    }
+}
+
+uint256 CBlockHeader::GetPoWHash() const
+{
+    // TODO: use function pointer, then later use dynamic linking
+    std::string powhashfunc = GetArg("-powhashfunc", "sha256_2");
+    if (powhashfunc == "sha256_2") {
+        return Hash(BEGIN(nVersion), END(nNonce));
+    }
+    else if (powhashfunc == "scrypt") {
+        uint256 thash;
+        scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
+        return thash;
+    }
+    else {
+        return uint256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    }
 }
 
 uint256 CBlock::BuildMerkleTree() const
