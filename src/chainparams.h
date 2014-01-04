@@ -66,6 +66,9 @@ public:
     const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     virtual const vector<CAddress>& FixedSeeds() const = 0;
     int RPCPort() const { return nRPCPort; }
+
+    virtual void init() = 0;
+
 protected:
     CChainParams() {}
 
@@ -83,10 +86,9 @@ protected:
 };
 
 /**
- * Return the currently selected parameters. This won't change after app startup
- * outside of the unit tests.
+ * Return the currently selected parameters.
  */
-const CChainParams &Params();
+CChainParams &Params();
 
 /** Sets the params returned by Params() to those for the given network. */
 void SelectParams(CChainParams::Network network);

@@ -99,19 +99,20 @@ unsigned int pnSeed[] =
 
 class CMainParams : public CChainParams {
 public:
-    CMainParams() {
+    void init() {
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
-        nDefaultPort = 8333;
-        nRPCPort = 8332;
+        uint32_t messageStart = strtoul(GetArg("-mainnet_magicbytes", "0xd9b4bef9").c_str(), NULL, 0);
+        pchMessageStart[0] = messageStart & 0xff;           // default: 0xf9
+        pchMessageStart[1] = (messageStart >> 8) & 0xff;    // default: 0xbe
+        pchMessageStart[2] = (messageStart >> 16) & 0xff;   // default: 0xb4
+        pchMessageStart[3] = (messageStart >> 24) && 0xff;  // default: 0xd9
+        vAlertPubKey = ParseHex(GetArg("-mainnet_alertpubkey", "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284"));
+        nDefaultPort = strtoul(GetArg("-mainnet_port", "8333").c_str(), NULL, 0);
+        nRPCPort = strtoul(GetArg("-mainnet_rpcport", "8332").c_str(), NULL, 0);
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
-        nSubsidyHalvingInterval = 210000;
+        nSubsidyHalvingInterval = strtoul(GetArg("-mainnet_halvinginterval", "210000").c_str(), NULL, 0);
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -186,14 +187,15 @@ static CMainParams mainParams;
 //
 class CTestNetParams : public CMainParams {
 public:
-    CTestNetParams() {
+    void init() {
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
+        uint32_t messageStart = strtoull(GetArg("-testnet_magicbytes", "0x0709110b").c_str(), NULL, 0);
+        pchMessageStart[0] = messageStart & 0xff;           // default: 0x0b
+        pchMessageStart[1] = (messageStart >> 8) & 0xff;    // default: 0x11
+        pchMessageStart[2] = (messageStart >> 16) & 0xff;   // default: 0x09
+        pchMessageStart[3] = (messageStart >> 24) && 0xff;  // default: 0x07
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 18333;
         nRPCPort = 18332;
@@ -239,7 +241,7 @@ public:
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18444;
         strDataDir = "regtest";
-        assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
+        //assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }
@@ -251,7 +253,7 @@ static CRegTestParams regTestParams;
 
 static CChainParams *pCurrentParams = &mainParams;
 
-const CChainParams &Params() {
+CChainParams &Params() {
     return *pCurrentParams;
 }
 

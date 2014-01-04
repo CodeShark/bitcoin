@@ -1023,6 +1023,15 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
     strMiscWarning = message;
 }
 
+std::string GetCoinName(bool lowercase)
+{
+    std::string name(GetArg("-coinname", "Bitcoin"));
+    if (lowercase) {
+        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+    }
+    return name;
+}
+
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
@@ -1032,7 +1041,7 @@ boost::filesystem::path GetDefaultDataDir()
     // Unix: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / GetCoinName();
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -1044,10 +1053,12 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     fs::create_directory(pathRet);
-    return pathRet / "Bitcoin";
+    return pathRet / GetCoinName();
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    std::string dirname(".");
+    dirname += GetCoinName(true);
+    return pathRet / dirname;
 #endif
 #endif
 }
@@ -1096,7 +1107,8 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
+    std::string filename = GetCoinName(false) + ".conf";
+    boost::filesystem::path pathConfigFile(filename);
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }

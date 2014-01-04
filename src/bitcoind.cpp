@@ -75,6 +75,11 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
+        //
+        // Coin/Chain Parameters
+        //
+        Params().init();
+
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to bitcoind / RPC client
