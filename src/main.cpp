@@ -1003,9 +1003,24 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
     return nSubsidy + nFees;
 }
 
-static const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-static const int64_t nTargetSpacing = 10 * 60;
-static const int64_t nInterval = nTargetTimespan / nTargetSpacing;
+//static const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+//static const int64_t nTargetSpacing = 10 * 60;
+//static const int64_t nInterval = TargetTimespan() / TargetSpacing();
+
+int64_t TargetTimespan()
+{
+    return GetArg("-targettimespan", 14 * 24 * 60 * 60); // two weeks
+}
+
+int64_t TargetSpacing()
+{
+    return GetArg("-targetspacing", 10 * 60);
+}
+
+int64_t Interval()
+{
+    return TargetTimespan() / TargetSpacing();
+}
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -1015,8 +1030,8 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
     const CBigNum &bnLimit = Params().ProofOfWorkLimit();
     // Testnet has min-difficulty blocks
-    // after nTargetSpacing*2 time between blocks:
-    if (TestNet() && nTime > nTargetSpacing*2)
+    // after TargetSpacing()*2 time between blocks:
+    if (TestNet() && nTime > TargetSpacing()*2)
         return bnLimit.GetCompact();
 
     CBigNum bnResult;
@@ -1026,7 +1041,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
         // Maximum 400% adjustment...
         bnResult *= 4;
         // ... in best-case exactly 4-times-normal target time
-        nTime -= nTargetTimespan*4;
+        nTime -= TargetTimespan()*4;
     }
     if (bnResult > bnLimit)
         bnResult = bnLimit;
@@ -1042,20 +1057,20 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return nProofOfWorkLimit;
 
     // Only change once per interval
-    if ((pindexLast->nHeight+1) % nInterval != 0)
+    if ((pindexLast->nHeight+1) % Interval() != 0)
     {
         if (TestNet())
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
+            if (pblock->nTime > pindexLast->nTime + TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -1065,30 +1080,30 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < nInterval-1; i++)
+    for (int i = 0; pindexFirst && i < Interval()-1; i++)
         pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     LogPrintf("  nActualTimespan = %"PRId64"  before bounds\n", nActualTimespan);
-    if (nActualTimespan < nTargetTimespan/4)
-        nActualTimespan = nTargetTimespan/4;
-    if (nActualTimespan > nTargetTimespan*4)
-        nActualTimespan = nTargetTimespan*4;
+    if (nActualTimespan < TargetTimespan()/4)
+        nActualTimespan = TargetTimespan()/4;
+    if (nActualTimespan > TargetTimespan()*4)
+        nActualTimespan = TargetTimespan()*4;
 
     // Retarget
     CBigNum bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     bnNew *= nActualTimespan;
-    bnNew /= nTargetTimespan;
+    bnNew /= TargetTimespan();
 
     if (bnNew > Params().ProofOfWorkLimit())
         bnNew = Params().ProofOfWorkLimit();
 
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
-    LogPrintf("nTargetTimespan = %"PRId64"    nActualTimespan = %"PRId64"\n", nTargetTimespan, nActualTimespan);
+    LogPrintf("TargetTimespan() = %"PRId64"    nActualTimespan = %"PRId64"\n", TargetTimespan(), nActualTimespan);
     LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
 
