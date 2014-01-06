@@ -241,6 +241,15 @@ uint256 CBlockHeader::GetPoWHash() const
     else if (powhashfunc == "scrypt") {
         uint256 thash;
         scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
+/*
+        std::cout << "CBlockHeader::GetPoWHash: scrypt hash: " << thash.GetHex() << std::endl;
+
+        // Get raw block string
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+        ssBlock << *this;
+        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+        std::cout << strHex << std::endl;
+*/
         return thash;
     }
     else {
