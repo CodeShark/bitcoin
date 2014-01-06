@@ -155,11 +155,17 @@ public:
         assert(hashGenesisBlock == uint256(GetArg("-mainnet_genesis_hash", "0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
         assert(genesis.hashMerkleRoot == uint256(GetArg("-mainnet_genesis_merkle", "0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")));
 
+        BOOST_FOREACH(std::string seed, mapMultiArgs["-mainnet_adddnsseed"])
+        {
+            vSeeds.push_back(CDNSSeedData(seed, seed));
+        }
+/*
         vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
         vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org"));
         vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com"));
         vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
+*/
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(strtoul(GetArg("-mainnet_pubkey_addr", "0").c_str(), NULL, 0));
         base58Prefixes[SCRIPT_ADDRESS] = list_of(strtoul(GetArg("-mainnet_script_addr", "5").c_str(), NULL, 0));
