@@ -790,7 +790,7 @@ public:
 
     uint256 GetBlockHash() const
     {
-        return GetBlockHeader().GetHash();
+        return *phashBlock;
     }
 
     uint256 GetPoWHash() const
