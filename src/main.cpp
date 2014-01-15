@@ -1090,9 +1090,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
+    int blockstogoback = Interval()-1;
+
+    if (GetBoolArg("-litecoinretargetrule", false)) {
+        if ((pindexLast->nHeight+1) != Interval())
+            blockstogoback = Interval();
+    }
+
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < Interval()-1; i++)
+    for (int i = 0; pindexFirst && i < blockstogoback; i++)
         pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
@@ -2165,10 +2172,11 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
                                  REJECT_INVALID, "non-final tx");
 
         // Check that the block chain matches the known block chain up to a checkpoint
+/*
         if (!Checkpoints::CheckBlock(nHeight, hash))
             return state.DoS(100, error("AcceptBlock() : rejected by checkpoint lock-in at %d", nHeight),
                              REJECT_CHECKPOINT, "checkpoint mismatch");
-
+*/
         // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
         if (block.nVersion < 2)
         {
