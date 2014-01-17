@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core.h"
+#include "chainparams.h"
 
 #include "util.h"
 
@@ -66,7 +67,7 @@ uint256 CTxOut::GetHash() const
 
 std::string CTxOut::ToString() const
 {
-    return strprintf("CTxOut(nValue=%"PRId64".%08"PRId64", scriptPubKey=%s)", nValue / GetCoin(), nValue % GetCoin(), scriptPubKey.ToString().substr(0,30).c_str());
+    return strprintf("CTxOut(nValue=%"PRId64".%08"PRId64", scriptPubKey=%s)", nValue / Params().CoinMultiplier(), nValue % Params().CoinMultiplier(), scriptPubKey.ToString().substr(0,30).c_str());
 }
 
 void CTxOut::print() const
@@ -114,7 +115,7 @@ int64_t CTransaction::GetValueOut() const
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         nValueOut += txout.nValue;
-        if (!MoneyRange(txout.nValue) || !MoneyRange(nValueOut))
+        if (!Params().InMoneyRange(txout.nValue) || !Params().InMoneyRange(nValueOut))
             throw std::runtime_error("CTransaction::GetValueOut() : value out of range");
     }
     return nValueOut;

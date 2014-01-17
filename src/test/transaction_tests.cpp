@@ -14,6 +14,9 @@
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
 
+#define COIN 100000000ull
+#define CENT 1000000
+
 using namespace std;
 using namespace json_spirit;
 

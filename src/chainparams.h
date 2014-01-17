@@ -57,7 +57,17 @@ public:
     const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const CBigNum& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
+    int64_t CoinMultiplier() const { return nCoinMultiplier; }
+    int64_t CentMultiplier() const { return nCentMultiplier; }
+    int64_t GenesisBlockRewardCoin() const { return nGenesisBlockRewardCoin; }
+    int64_t BlockRewardStartCoin() const { return nBlockRewardStartCoin; }
+    int64_t BlockRewardMinimumCoin() const { return nBlockRewardMinimumCoin; }
+    int64_t TargetTimespan() const { return nTargetTimespan; } // average seconds per retarget
+    int64_t TargetSpacing() const { return nTargetSpacing; } // average seconds per block
+    int64_t TargetInterval() const { return nTargetInterval; } // blocks per retarget
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
+    int64_t MaxMoney() const { return nMaxMoney; }
+    bool InMoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= nMaxMoney); }
     virtual const CBlock& GenesisBlock() const = 0;
     virtual bool RequireRPCPassword() const { return true; }
     const string& DataDir() const { return strDataDir; }
@@ -79,7 +89,16 @@ protected:
     int nDefaultPort;
     int nRPCPort;
     CBigNum bnProofOfWorkLimit;
+    int64_t nCoinMultiplier;
+    int64_t nCentMultiplier;
+    int64_t nGenesisBlockRewardCoin;
+    int64_t nBlockRewardStartCoin;
+    int64_t nBlockRewardMinimumCoin;
+    int64_t nTargetTimespan;
+    int64_t nTargetSpacing;
+    int64_t nTargetInterval;
     int nSubsidyHalvingInterval;
+    int64_t nMaxMoney;
     string strDataDir;
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];

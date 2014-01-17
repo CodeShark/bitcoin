@@ -36,10 +36,9 @@ class CNetAddr;
 class uint256;
 
 // TODO: replace all instances of these constants with calls to the functions below
-static const int64_t COIN = 100000000;
-static const int64_t CENT = 1000000;
+//static const int64_t COIN = 100000000;
+//static const int64_t CENT = 1000000;
 
-int64_t GetFirstReward(); // default: 50
 int64_t GetCoin();        // default: 100000000
 int64_t GetCent();        // default:   1000000
 

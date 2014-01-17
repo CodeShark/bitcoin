@@ -140,28 +140,6 @@ public:
 instance_of_cinit;
 
 
-// The following three functions have hardcoded return values. These values should be configurable from config file.
-int64_t GetFirstReward()
-{
-    // TODO: Make the type size platform-independent
-    //return strtoull(GetArg("-firstreward", "50").c_str(), 0, NULL);
-    return 50;
-}
-
-int64_t GetCoin()
-{
-    // TODO: Make the type size platform-independent
-    //return strtoull(GetArg("-coinvalue", "100000000").c_str(), 0, NULL);
-    return 100000000;
-} 
-
-int64_t GetCent()
-{
-    // TODO: Make the type size platform-independent
-    //return GetCoin() / 100;
-    return 1000000;
-}
-
 
 
 
@@ -406,8 +384,8 @@ string FormatMoney(int64_t n, bool fPlus)
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
     int64_t n_abs = (n > 0 ? n : -n);
-    int64_t quotient = n_abs/COIN;
-    int64_t remainder = n_abs%COIN;
+    int64_t quotient = n_abs / Params().CoinMultiplier();
+    int64_t remainder = n_abs % Params().CoinMultiplier();
     string str = strprintf("%"PRId64".%08"PRId64, quotient, remainder);
 
     // Right-trim excess zeros before the decimal point:
@@ -442,7 +420,7 @@ bool ParseMoney(const char* pszIn, int64_t& nRet)
         if (*p == '.')
         {
             p++;
-            int64_t nMult = CENT*10;
+            int64_t nMult = 10 * Params().CentMultiplier();
             while (isdigit(*p) && (nMult > 0))
             {
                 nUnits += nMult * (*p++ - '0');
@@ -461,10 +439,10 @@ bool ParseMoney(const char* pszIn, int64_t& nRet)
             return false;
     if (strWhole.size() > 10) // guard against 63 bit overflow
         return false;
-    if (nUnits < 0 || nUnits > COIN)
+    if (nUnits < 0 || nUnits > Params().CoinMultiplier())
         return false;
     int64_t nWhole = atoi64(strWhole);
-    int64_t nValue = nWhole*COIN + nUnits;
+    int64_t nValue = nWhole * Params().CoinMultiplier() + nUnits;
 
     nRet = nValue;
     return true;

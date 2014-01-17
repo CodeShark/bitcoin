@@ -9,6 +9,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#define COIN 100000000ull
+#define CENT 1000000
+
 using namespace std;
 
 // Test routines internal to script.cpp:

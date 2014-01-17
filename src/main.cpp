@@ -604,11 +604,11 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         if (txout.nValue < 0)
             return state.DoS(100, error("CheckTransaction() : txout.nValue negative"),
                              REJECT_INVALID, "vout negative");
-        if (txout.nValue > MAX_MONEY)
+        if (txout.nValue > Params().MaxMoney())
             return state.DoS(100, error("CheckTransaction() : txout.nValue too high"),
                              REJECT_INVALID, "vout too large");
         nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut))
+        if (!Params().InMoneyRange(nValueOut))
             return state.DoS(100, error("CheckTransaction() : txout total out of range"),
                              REJECT_INVALID, "txout total too large");
     }
@@ -665,12 +665,12 @@ int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, 
     if (nMinFee < nBaseFee && mode == GMF_SEND)
     {
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
-            if (txout.nValue < CENT)
+            if (txout.nValue < Params().CentMultiplier())
                 nMinFee = nBaseFee;
     }
 
-    if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
+    if (!Params().InMoneyRange(nMinFee))
+        nMinFee = Params().MaxMoney();
     return nMinFee;
 }
 
@@ -1007,31 +1007,17 @@ uint256 static GetOrphanRoot(const uint256& hash)
 
 int64_t GetBlockValue(int nHeight, int64_t nFees)
 {
-    int64_t nSubsidy = 50 * COIN;
+    if (nHeight == 0) return Params().GenesisBlockRewardCoin();
 
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    int64_t nSubsidy = Params().BlockRewardStartCoin();
+
+    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years in bitcoin.
+    // This can vary for other coins.
     nSubsidy >>= (nHeight / Params().SubsidyHalvingInterval());
 
+    if (nSubsidy < Params().BlockRewardMinimumCoin()) nSubsidy = Params().BlockRewardMinimumCoin();
+
     return nSubsidy + nFees;
-}
-
-//static const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-//static const int64_t nTargetSpacing = 10 * 60;
-//static const int64_t nInterval = TargetTimespan() / TargetSpacing();
-
-int64_t TargetTimespan()
-{
-    return GetArg("-targettimespan", 14 * 24 * 60 * 60); // two weeks
-}
-
-int64_t TargetSpacing()
-{
-    return GetArg("-targetspacing", 10 * 60);
-}
-
-int64_t Interval()
-{
-    return TargetTimespan() / TargetSpacing();
 }
 
 //
@@ -1042,8 +1028,8 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
     const CBigNum &bnLimit = Params().ProofOfWorkLimit();
     // Testnet has min-difficulty blocks
-    // after TargetSpacing()*2 time between blocks:
-    if (TestNet() && nTime > TargetSpacing()*2)
+    // after TargetSpacing() * 2 time between blocks:
+    if (TestNet() && nTime > Params().TargetSpacing() * 2)
         return bnLimit.GetCompact();
 
     CBigNum bnResult;
@@ -1053,7 +1039,7 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
         // Maximum 400% adjustment...
         bnResult *= 4;
         // ... in best-case exactly 4-times-normal target time
-        nTime -= TargetTimespan()*4;
+        nTime -= Params().TargetTimespan() * 4;
     }
     if (bnResult > bnLimit)
         bnResult = bnLimit;
@@ -1069,20 +1055,20 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return nProofOfWorkLimit;
 
     // Only change once per interval
-    if ((pindexLast->nHeight+1) % Interval() != 0)
+    if ((pindexLast->nHeight+1) % Params().TargetInterval() != 0)
     {
         if (TestNet())
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->nTime > pindexLast->nTime + TargetSpacing()*2)
+            if (pblock->nTime > pindexLast->nTime + Params().TargetSpacing() * 2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Params().TargetInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -1090,11 +1076,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         return pindexLast->nBits;
     }
 
-    int blockstogoback = Interval()-1;
+    int blockstogoback = Params().TargetInterval() - 1;
 
     if (GetBoolArg("-litecoinretargetrule", false)) {
-        if ((pindexLast->nHeight+1) != Interval())
-            blockstogoback = Interval();
+        if ((pindexLast->nHeight+1) != Params().TargetInterval())
+            blockstogoback = Params().TargetInterval();
     }
 
     // Go back by what we want to be 14 days worth of blocks
@@ -1106,23 +1092,23 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     LogPrintf("  nActualTimespan = %"PRId64"  before bounds\n", nActualTimespan);
-    if (nActualTimespan < TargetTimespan()/4)
-        nActualTimespan = TargetTimespan()/4;
-    if (nActualTimespan > TargetTimespan()*4)
-        nActualTimespan = TargetTimespan()*4;
+    if (nActualTimespan < Params().TargetTimespan() / 4)
+        nActualTimespan = Params().TargetTimespan() / 4;
+    if (nActualTimespan > Params().TargetTimespan() * 4)
+        nActualTimespan = Params().TargetTimespan() * 4;
 
     // Retarget
     CBigNum bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     bnNew *= nActualTimespan;
-    bnNew /= TargetTimespan();
+    bnNew /= Params().TargetTimespan();
 
     if (bnNew > Params().ProofOfWorkLimit())
         bnNew = Params().ProofOfWorkLimit();
 
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
-    LogPrintf("TargetTimespan() = %"PRId64"    nActualTimespan = %"PRId64"\n", TargetTimespan(), nActualTimespan);
+    LogPrintf("TargetTimespan() = %"PRId64"    nActualTimespan = %"PRId64"\n", Params().TargetTimespan(), nActualTimespan);
     LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
 
@@ -1414,7 +1400,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
             // Check for negative or overflow input values
             nValueIn += coins.vout[prevout.n].nValue;
-            if (!MoneyRange(coins.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            if (!Params().InMoneyRange(coins.vout[prevout.n].nValue) || !Params().InMoneyRange(nValueIn))
                 return state.DoS(100, error("CheckInputs() : txin values out of range"),
                                  REJECT_INVALID, "input values out of range");
 
@@ -1430,7 +1416,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
             return state.DoS(100, error("CheckInputs() : %s nTxFee < 0", tx.GetHash().ToString().c_str()),
                              REJECT_INVALID, "fee < 0");
         nFees += nTxFee;
-        if (!MoneyRange(nFees))
+        if (!Params().InMoneyRange(nFees))
             return state.DoS(100, error("CheckInputs() : nFees out of range"),
                              REJECT_INVALID, "fee out of range");
 

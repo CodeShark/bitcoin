@@ -113,7 +113,16 @@ public:
         nDefaultPort = strtoul(GetArg("-mainnet_port", "8333").c_str(), NULL, 0);
         nRPCPort = strtoul(GetArg("-mainnet_rpcport", "8332").c_str(), NULL, 0);
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> strtoul(GetArg("-mainnet_proofofworklimitexp", "32").c_str(), NULL, 0));
+        nCoinMultiplier = strtoull(GetArg("-mainnet_coinmultiplier", "100000000"). c_str(), NULL, 0);
+        nCentMultiplier = nCoinMultiplier / 100;
+        nGenesisBlockRewardCoin = strtoull(GetArg("-mainnet_genesisblockreward", "50").c_str(), NULL, 0) * nCoinMultiplier;
+        nBlockRewardStartCoin = strtoull(GetArg("-mainnet_blockrewardstart", "50").c_str(), NULL, 0) * nCoinMultiplier;
+        nBlockRewardMinimumCoin = strtoull(GetArg("-mainnet_blockrewardminimum", "0").c_str(), NULL, 0) * nCoinMultiplier;
+        nTargetTimespan = GetArg("-mainnet_targettimespan", 14 * 24 * 60 * 60); // two weeks by default
+        nTargetSpacing = GetArg("-mainnet_targetspacing", 10 * 60); // ten minutes by default
+        nTargetInterval = nTargetTimespan / nTargetSpacing;
         nSubsidyHalvingInterval = strtoul(GetArg("-mainnet_halvinginterval", "210000").c_str(), NULL, 0);
+        nMaxMoney = strtoull(GetArg("-mainnet_maximumcoins", "21000000").c_str(), NULL, 0) * nCoinMultiplier;
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -131,7 +140,7 @@ public:
         txNew.vin.resize(1);
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].nValue = GetFirstReward() * GetCoin();
+        txNew.vout[0].nValue = nGenesisBlockRewardCoin;
         txNew.vout[0].scriptPubKey = CScript() << ParseHex(GetArg("-mainnet_genesis_pubkey", "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f").c_str()) << OP_CHECKSIG;
         genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock = 0;

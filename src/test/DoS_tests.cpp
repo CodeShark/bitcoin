@@ -18,6 +18,9 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
+#define COIN 100000000ull
+#define CENT 1000000
+
 // Tests this internal-to-main.cpp method:
 extern bool AddOrphanTx(const CTransaction& tx);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);

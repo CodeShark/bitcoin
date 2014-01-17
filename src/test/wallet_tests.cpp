@@ -8,6 +8,9 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
+#define COIN 100000000ull
+#define CENT 1000000
+
 // how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
 #define RUN_TESTS 100
 
