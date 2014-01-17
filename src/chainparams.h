@@ -65,6 +65,8 @@ public:
     int64_t TargetTimespan() const { return nTargetTimespan; } // average seconds per retarget
     int64_t TargetSpacing() const { return nTargetSpacing; } // average seconds per block
     int64_t TargetInterval() const { return nTargetInterval; } // blocks per retarget
+    int MaxRetargetAdjustmentUp() const { return nMaxRetargetAdjustmentUp; } // maximum percent that difficulty can increase
+    int MaxRetargetAdjustmentDown() const { return nMaxRetargetAdjustmentDown; }  // maximum percent that difficulty can decrease
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     int64_t MaxMoney() const { return nMaxMoney; }
     bool InMoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= nMaxMoney); }
@@ -97,6 +99,8 @@ protected:
     int64_t nTargetTimespan;
     int64_t nTargetSpacing;
     int64_t nTargetInterval;
+    int nMaxRetargetAdjustmentUp;
+    int nMaxRetargetAdjustmentDown;
     int nSubsidyHalvingInterval;
     int64_t nMaxMoney;
     string strDataDir;

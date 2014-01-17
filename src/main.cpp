@@ -1092,10 +1092,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     LogPrintf("  nActualTimespan = %"PRId64"  before bounds\n", nActualTimespan);
-    if (nActualTimespan < Params().TargetTimespan() / 4)
-        nActualTimespan = Params().TargetTimespan() / 4;
-    if (nActualTimespan > Params().TargetTimespan() * 4)
-        nActualTimespan = Params().TargetTimespan() * 4;
+    int64_t limitUp = Params().TargetTimespan() * 100 / Params().MaxRetargetAdjustmentUp();
+    int64_t limitDown = Params().TargetTimespan() * Params().MaxRetargetAdjustmentDown() / 100;
+    if (nActualTimespan < limitUp)
+        nActualTimespan = limitUp;
+    if (nActualTimespan > limitDown)
+        nActualTimespan = limitDown;
 
     // Retarget
     CBigNum bnNew;

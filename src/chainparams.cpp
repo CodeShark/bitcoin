@@ -121,6 +121,8 @@ public:
         nTargetTimespan = GetArg("-mainnet_targettimespan", 14 * 24 * 60 * 60); // two weeks by default
         nTargetSpacing = GetArg("-mainnet_targetspacing", 10 * 60); // ten minutes by default
         nTargetInterval = nTargetTimespan / nTargetSpacing;
+        nMaxRetargetAdjustmentUp = GetArg("-mainnet_maxretargetadjustmentup", 400);
+        nMaxRetargetAdjustmentDown = GetArg("-mainnet_maxretargetadjustmentdown", 400);
         nSubsidyHalvingInterval = strtoul(GetArg("-mainnet_halvinginterval", "210000").c_str(), NULL, 0);
         nMaxMoney = strtoull(GetArg("-mainnet_maximumcoins", "21000000").c_str(), NULL, 0) * nCoinMultiplier;
 
