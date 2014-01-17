@@ -8,7 +8,9 @@
 
 #include "util.h"
 
+// Additional hash functions. TODO: Make plugin
 #include "scrypt.h"
+#include "hash9.h"
 
 std::string COutPoint::ToString() const
 {
@@ -227,6 +229,9 @@ uint256 CBlockHeader::GetHash() const
         scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
         return thash;
     }
+    else if (headerhashfunc == "hash9") {
+        return Hash9(BEGIN(nVersion), END(nNonce));
+    }
     else {
         return uint256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     }
@@ -252,6 +257,9 @@ uint256 CBlockHeader::GetPoWHash() const
         std::cout << strHex << std::endl;
 */
         return thash;
+    }
+    else if (powhashfunc == "hash9") {
+        return Hash9(BEGIN(nVersion), END(nNonce));
     }
     else {
         return uint256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");

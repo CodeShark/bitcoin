@@ -63,6 +63,24 @@ BITCOIN_CORE_H = \
   walletdb.h \
   wallet.h
 
+HASH_FUNCS_H = \
+  sph_types.h \
+  sph_blake.h \
+  sph_bmw.h \
+  sph_groestl.h \
+  sph_jh.h \
+  sph_keccak.h \
+  sph_skein.h \
+  hash9.h
+
+HASH_FUNCS_SOURCES = \
+  blake.c \
+  bmw.c \
+  groestl.c \
+  jh.c \
+  keccak.c \
+  skein.c
+
 JSON_H = \
   json/json_spirit.h \
   json/json_spirit_error_position.h \
@@ -128,6 +146,8 @@ libbitcoin_common_a_SOURCES = \
   util.cpp \
   version.cpp \
   scrypt.cpp \
+  $(HASH_FUNCS_H) \
+  $(HASH_FUNCS_SOURCES) \
   $(BITCOIN_CORE_H)
 
 libbitcoin_cli_a_SOURCES = \
