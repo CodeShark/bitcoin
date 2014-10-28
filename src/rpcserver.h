@@ -27,6 +27,8 @@ namespace RPCServer
     void OnStopped(boost::function<void ()> slot);
     void OnPreCommand(boost::function<void (const CRPCCommand&)> slot);
     void OnPostCommand(boost::function<void (const CRPCCommand&)> slot);
+
+    void AddCommand(const CRPCCommand& cmd);
 }
 
 class CBlockIndex;
@@ -82,11 +84,15 @@ typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool f
 class CRPCCommand
 {
 public:
+    CRPCCommand(const std::string& category_, const std::string& name_, rpcfn_type actor_, bool okSafeMode_, bool reqWallet_)
+        : category(category_), name(name_), actor(actor_), okSafeMode(okSafeMode_), reqWallet(reqWallet_) { }
+
+    bool operator<(const CRPCCommand& other) const { return name < other.name; }
+
     std::string category;
     std::string name;
     rpcfn_type actor;
     bool okSafeMode;
-    bool threadSafe;
     bool reqWallet;
 };
 
@@ -96,9 +102,11 @@ public:
 class CRPCTable
 {
 private:
-    std::map<std::string, const CRPCCommand*> mapCommands;
+    std::map<std::string, CRPCCommand> mapCommands;
+
 public:
-    CRPCTable();
+    //CRPCTable();
+    void insert(const CRPCCommand& cmd);
     const CRPCCommand* operator[](std::string name) const;
     std::string help(std::string name) const;
 
@@ -112,7 +120,7 @@ public:
     json_spirit::Value execute(const std::string &method, const json_spirit::Array &params) const;
 };
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 
 //
 // Utilities: convert hex-encoded Values

@@ -10,6 +10,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
+#include "rpcrawtransaction.h"
 #include "rpcserver.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -28,6 +29,7 @@
 using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
+using namespace RPCRawTransaction;
 using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex)
@@ -770,4 +772,18 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     RelayTransaction(tx);
 
     return hashTx.GetHex();
+}
+
+void RPCRawTransaction::Register()
+{
+    RPCServer::AddCommand(CRPCCommand("rawtransactions", "createrawtransaction", &createrawtransaction, true, false));
+    RPCServer::AddCommand(CRPCCommand("rawtransactions", "decoderawtransaction", &decoderawtransaction, true, false));
+    RPCServer::AddCommand(CRPCCommand("rawtransactions", "decodescript", &decodescript, true, false));
+    RPCServer::AddCommand(CRPCCommand("rawtransactions", "getrawtransaction", &getrawtransaction, true, false));
+    RPCServer::AddCommand(CRPCCommand("rawtransactions", "sendrawtransaction", &sendrawtransaction, false, false));
+    RPCServer::AddCommand(CRPCCommand("rawtransactions", "signrawtransaction", &signrawtransaction, false, false));
+
+#ifdef ENABLE_WALLET
+    RPCServer::AddCommand(CRPCCommand("wallet", "listunspent", &listunspent, false, true));
+#endif
 }

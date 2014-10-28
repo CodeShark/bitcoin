@@ -6,6 +6,7 @@
 #include "base58.h"
 #include "core_io.h"
 #include "rpcserver.h"
+#include "rpcwallet.h"
 #include "init.h"
 #include "net.h"
 #include "netbase.h"
@@ -23,6 +24,7 @@
 using namespace std;
 using namespace boost;
 using namespace boost::assign;
+using namespace RPCWallet;
 using namespace json_spirit;
 
 int64_t nWalletUnlockTime;
@@ -2044,4 +2046,41 @@ Value getwalletinfo(const Array& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
+}
+
+void RPCWallet::Register()
+{
+    RPCServer::AddCommand(CRPCCommand("wallet", "addmultisigaddress", &addmultisigaddress, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "backupwallet", &backupwallet, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "encryptwallet", &encryptwallet, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getaccountaddress", &getaccountaddress, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getaccount", &getaccount, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getaddressesbyaccount", &getaddressesbyaccount, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getbalance", &getbalance, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getnewaddress", &getnewaddress, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getrawchangeaddress", &getrawchangeaddress, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getreceivedbyaccount", &getreceivedbyaccount, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getreceivedbyaddress", &getreceivedbyaddress, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "gettransaction", &gettransaction, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getunconfirmedbalance", &getunconfirmedbalance, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "getwalletinfo", &getunconfirmedbalance, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "keypoolrefill", &keypoolrefill, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listaccounts", &listaccounts, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listaddressgroupings", &listaddressgroupings, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listlockunspent", &listlockunspent, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listreceivedbyaccount", &listreceivedbyaccount, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listreceivedbyaddress", &listreceivedbyaddress, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listsinceblock", &listsinceblock, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "listtransactions", &listtransactions, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "lockunspent", &lockunspent, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "move", &movecmd, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "sendfrom", &sendfrom, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "sendmany", &sendmany, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "sendtoaddress", &sendtoaddress, false, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "setaccount", &setaccount, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "settxfee", &settxfee, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "signmessage", &signmessage, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "walletlock", &walletlock, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "walletpassphrasechange", &walletpassphrasechange, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "walletpassphrase", &walletpassphrase, true, true));
 }

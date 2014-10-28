@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "rpcnet.h"
 #include "rpcserver.h"
 
 #include "main.h"
@@ -18,6 +19,7 @@
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
+using namespace RPCNet;
 using namespace std;
 
 Value getconnectioncount(const Array& params, bool fHelp)
@@ -438,4 +440,15 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     }
     obj.push_back(Pair("localaddresses", localAddresses));
     return obj;
+}
+
+void RPCNet::Register()
+{
+    RPCServer::AddCommand(CRPCCommand("network", "getnetworkinfo", &getnetworkinfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("network", "addnode", &addnode, true, false));
+    RPCServer::AddCommand(CRPCCommand("network", "getaddednodeinfo", &getaddednodeinfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("network", "getconnectioncount", &getconnectioncount, true, false));
+    RPCServer::AddCommand(CRPCCommand("network", "getnettotals", &getnettotals, true, false));
+    RPCServer::AddCommand(CRPCCommand("network", "getpeerinfo", &getpeerinfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("network", "ping", &ping, true, false));
 }

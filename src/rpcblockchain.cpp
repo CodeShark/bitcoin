@@ -5,6 +5,7 @@
 
 #include "checkpoints.h"
 #include "main.h"
+#include "rpcblockchain.h"
 #include "rpcserver.h"
 #include "sync.h"
 #include "util.h"
@@ -14,6 +15,7 @@
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
+using namespace RPCBlockchain;
 using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
@@ -579,3 +581,18 @@ Value getmempoolinfo(const Array& params, bool fHelp)
     return ret;
 }
 
+void RPCBlockchain::Register()
+{
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getblockchaininfo", &getblockchaininfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getbestblockhash", &getbestblockhash, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getblockcount", &getblockcount, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getblock", &getblock, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getblockhash", &getblockhash, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getchaintips", &getchaintips, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getdifficulty", &getdifficulty, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getmempoolinfo", &getmempoolinfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "getrawmempool", &getrawmempool, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "gettxout", &gettxout, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "gettxoutsetinfo", &gettxoutsetinfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("blockchain", "verifychain", &verifychain, true, false));
+}

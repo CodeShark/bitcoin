@@ -4,6 +4,7 @@
 
 #include "base58.h"
 #include "rpcserver.h"
+#include "rpcdump.h"
 #include "init.h"
 #include "main.h"
 #include "script/script.h"
@@ -22,6 +23,7 @@
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
+using namespace RPCDump;
 using namespace std;
 
 void EnsureWalletIsUnlocked();
@@ -404,4 +406,13 @@ Value dumpwallet(const Array& params, bool fHelp)
     file << "# End of dump\n";
     file.close();
     return Value::null;
+}
+
+void RPCDump::Register()
+{
+    RPCServer::AddCommand(CRPCCommand("wallet", "importprivkey", &importprivkey, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "importaddress", &importaddress, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "importwallet", &importwallet, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "dumpprivkey", &dumpprivkey, true, true));
+    RPCServer::AddCommand(CRPCCommand("wallet", "dumpwallet", &importwallet, true, true));
 }

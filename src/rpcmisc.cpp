@@ -8,6 +8,7 @@
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "rpcmisc.h"
 #include "rpcserver.h"
 #include "timedata.h"
 #include "util.h"
@@ -25,6 +26,7 @@
 using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
+using namespace RPCMisc;
 using namespace std;
 
 /**
@@ -366,4 +368,13 @@ Value verifymessage(const Array& params, bool fHelp)
         return false;
 
     return (pubkey.GetID() == keyID);
+}
+
+void RPCMisc::Register()
+{
+    RPCServer::AddCommand(CRPCCommand("control", "getinfo", &getinfo, true, false));
+
+    RPCServer::AddCommand(CRPCCommand("util", "createmultisig", &createmultisig, true, false));
+    RPCServer::AddCommand(CRPCCommand("util", "validateaddress", &validateaddress, true, false));
+    RPCServer::AddCommand(CRPCCommand("util", "verifymessage", &verifymessage, true, false));
 }

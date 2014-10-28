@@ -46,6 +46,8 @@ static boost::asio::io_service::work *rpc_dummy_work = NULL;
 static std::vector<CSubNet> rpc_allow_subnets; //!< List of subnets to allow RPC connections from
 static std::vector< boost::shared_ptr<ip::tcp::acceptor> > rpc_acceptors;
 
+CRPCTable tableRPC;
+
 static struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
@@ -73,6 +75,11 @@ void RPCServer::OnPostCommand(boost::function<void (const CRPCCommand&)> slot)
 {
     g_rpcSignals.PostCommand.connect(boost::bind(slot, _1));
 }
+
+void RPCServer::AddCommand(const CRPCCommand& cmd)
+{
+    tableRPC.insert(cmd);
+}    
 
 void RPCTypeCheck(const Array& params,
                   const list<Value_type>& typesExpected,
@@ -174,15 +181,15 @@ string CRPCTable::help(string strCommand) const
     string strRet;
     string category;
     set<rpcfn_type> setDone;
-    vector<pair<string, const CRPCCommand*> > vCommands;
+    vector<pair<string, CRPCCommand> > vCommands;
 
-    for (map<string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
-        vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
+    for (map<string, CRPCCommand>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
+        vCommands.push_back(make_pair(mi->second.category + mi->first, mi->second));
     sort(vCommands.begin(), vCommands.end());
 
-    BOOST_FOREACH(const PAIRTYPE(string, const CRPCCommand*)& command, vCommands)
+    BOOST_FOREACH(const PAIRTYPE(string, CRPCCommand)& command, vCommands)
     {
-        const CRPCCommand *pcmd = command.second;
+        const CRPCCommand *pcmd = &command.second;
         string strMethod = pcmd->name;
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod.find("label") != string::npos)
@@ -267,7 +274,7 @@ Value stop(const Array& params, bool fHelp)
 // Call Table
 //
 
-
+#ifdef RPCTABLE
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafeMode threadSafe reqWallet
   //  --------------------- ------------------------  -----------------------  ---------- ---------- ---------
@@ -383,13 +390,19 @@ CRPCTable::CRPCTable()
         mapCommands[pcmd->name] = pcmd;
     }
 }
+#endif
+
+void CRPCTable::insert(const CRPCCommand& cmd)
+{
+    mapCommands.insert(pair<string, CRPCCommand>(cmd.name, cmd));
+}
 
 const CRPCCommand *CRPCTable::operator[](string name) const
 {
-    map<string, const CRPCCommand*>::const_iterator it = mapCommands.find(name);
+    map<string, CRPCCommand>::const_iterator it = mapCommands.find(name);
     if (it == mapCommands.end())
         return NULL;
-    return (*it).second;
+    return &(*it).second;
 }
 
 
@@ -996,5 +1009,3 @@ std::string HelpExampleRpc(string methodname, string args){
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
-
-const CRPCTable tableRPC;

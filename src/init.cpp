@@ -16,6 +16,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "rpcall.h"
 #include "rpcserver.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -1264,6 +1265,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     StartNode(threadGroup);
 
+    RPCAll::Register();
     RPCServer::OnStopped(&OnRPCStopped);
     RPCServer::OnPreCommand(&OnRPCPreCommand);
     if (fServer)

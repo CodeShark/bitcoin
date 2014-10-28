@@ -10,6 +10,7 @@
 #include "main.h"
 #include "miner.h"
 #include "pow.h"
+#include "rpcmining.h"
 #include "rpcserver.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
@@ -25,6 +26,7 @@
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
+using namespace RPCMining;
 using namespace std;
 
 // Return average network hashes per second based on the last 'lookup' blocks,
@@ -634,4 +636,19 @@ Value estimatepriority(const Array& params, bool fHelp)
         nBlocks = 1;
 
     return mempool.estimatePriority(nBlocks);
+}
+
+void RPCMining::Register()
+{
+#ifdef ENABLE_WALLET
+    RPCServer::AddCommand(CRPCCommand("generating", "getgenerate", &getgenerate, true, false));
+    RPCServer::AddCommand(CRPCCommand("generating", "gethashespersec", &gethashespersec, true, false));
+    RPCServer::AddCommand(CRPCCommand("generating", "setgenerate", &setgenerate, true, false));
+#endif
+
+    RPCServer::AddCommand(CRPCCommand("mining", "getblocktemplate", &getblocktemplate, true, false));
+    RPCServer::AddCommand(CRPCCommand("mining", "getmininginfo", &getmininginfo, true, false));
+    RPCServer::AddCommand(CRPCCommand("mining", "getnetworkhashps", &getnetworkhashps, true, false));
+    RPCServer::AddCommand(CRPCCommand("mining", "prioritisetransaction", &prioritisetransaction, true, false));
+    RPCServer::AddCommand(CRPCCommand("mining", "submitblock", &submitblock, true, false));
 }
