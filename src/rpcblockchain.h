@@ -6,6 +6,10 @@
 #ifndef _BITCOIN_RPCBLOCKCHAIN
 #define _BITCOIN_RPCBLOCKCHAIN
 
+class CBlockIndex;
+
+extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+
 namespace RPCBlockchain
 {
     void Register();

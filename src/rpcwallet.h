@@ -6,6 +6,12 @@
 #ifndef _BITCOIN_RPCWALLET
 #define _BITCOIN_RPCWALLET
 
+#include <string>
+
+extern int64_t nWalletUnlockTime;
+extern std::string HelpRequiringPassphrase();
+extern void EnsureWalletIsUnlocked();
+
 namespace RPCWallet
 {
     void Register();

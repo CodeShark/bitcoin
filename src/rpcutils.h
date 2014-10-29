@@ -76,4 +76,19 @@ inline std::vector<unsigned char> ParseHexO(const json_spirit::Object& o, std::s
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
+//
+// Help Examples
+//
+
+inline std::string HelpExampleCli(std::string methodname, std::string args)
+{
+    return "> bitcoin-cli " + methodname + " " + args + "\n";
+}
+
+inline std::string HelpExampleRpc(std::string methodname, std::string args)
+{
+    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+}
+
 #endif // _BITCOIN_RPC_UTILS

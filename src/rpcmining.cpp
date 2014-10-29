@@ -10,6 +10,7 @@
 #include "main.h"
 #include "miner.h"
 #include "pow.h"
+#include "rpcblockchain.h"
 #include "rpcmining.h"
 #include "rpcserver.h"
 #include "rpcutils.h"

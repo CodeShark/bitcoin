@@ -8,6 +8,7 @@
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "rpcblockchain.h"
 #include "rpcmisc.h"
 #include "rpcserver.h"
 #include "rpcutils.h"
