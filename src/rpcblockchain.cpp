@@ -7,6 +7,7 @@
 #include "main.h"
 #include "rpcblockchain.h"
 #include "rpcserver.h"
+#include "rpcutils.h"
 #include "sync.h"
 #include "util.h"
 

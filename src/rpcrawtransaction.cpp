@@ -12,6 +12,7 @@
 #include "net.h"
 #include "rpcrawtransaction.h"
 #include "rpcserver.h"
+#include "rpcutils.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "script/standard.h"

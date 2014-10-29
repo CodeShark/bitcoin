@@ -121,57 +121,6 @@ void RPCTypeCheck(const Object& o,
     }
 }
 
-static inline int64_t roundint64(double d)
-{
-    return (int64_t)(d > 0 ? d + 0.5 : d - 0.5);
-}
-
-CAmount AmountFromValue(const Value& value)
-{
-    double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    CAmount nAmount = roundint64(dAmount * COIN);
-    if (!MoneyRange(nAmount))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    return nAmount;
-}
-
-Value ValueFromAmount(const CAmount& amount)
-{
-    return (double)amount / (double)COIN;
-}
-
-uint256 ParseHashV(const Value& v, string strName)
-{
-    string strHex;
-    if (v.type() == str_type)
-        strHex = v.get_str();
-    if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
-    uint256 result;
-    result.SetHex(strHex);
-    return result;
-}
-uint256 ParseHashO(const Object& o, string strKey)
-{
-    return ParseHashV(find_value(o, strKey), strKey);
-}
-vector<unsigned char> ParseHexV(const Value& v, string strName)
-{
-    string strHex;
-    if (v.type() == str_type)
-        strHex = v.get_str();
-    if (!IsHex(strHex))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
-    return ParseHex(strHex);
-}
-vector<unsigned char> ParseHexO(const Object& o, string strKey)
-{
-    return ParseHexV(find_value(o, strKey), strKey);
-}
-
-
 ///
 /// Note: This interface may still be subject to change.
 ///

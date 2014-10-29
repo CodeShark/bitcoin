@@ -10,6 +10,7 @@
 #include "netbase.h"
 #include "rpcmisc.h"
 #include "rpcserver.h"
+#include "rpcutils.h"
 #include "timedata.h"
 #include "util.h"
 #ifdef ENABLE_WALLET

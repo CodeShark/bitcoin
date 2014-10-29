@@ -12,6 +12,7 @@
 #include "pow.h"
 #include "rpcmining.h"
 #include "rpcserver.h"
+#include "rpcutils.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
 #include "db.h"

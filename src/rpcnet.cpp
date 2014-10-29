@@ -4,6 +4,7 @@
 
 #include "rpcnet.h"
 #include "rpcserver.h"
+#include "rpcutils.h"
 
 #include "main.h"
 #include "net.h"
