@@ -1268,6 +1268,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     RPCAll::Register();
     RPCServer::OnStopped(&OnRPCStopped);
     RPCServer::OnPreCommand(&OnRPCPreCommand);
+    RPCServer::OnStartShutdown(&StartShutdown);
     if (fServer)
         StartRPCThreads();
 

@@ -5,15 +5,18 @@
 
 #include "rpcserver.h"
 
+#include "netbase.h"
+
 #include "base58.h"
 #include "init.h"
 #include "random.h"
+#include "tinyformat.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#ifdef ENABLE_WALLET
-#include "wallet.h"
-#endif
+//#ifdef ENABLE_WALLET
+//#include "wallet.h"
+//#endif
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
@@ -54,6 +57,7 @@ static struct CRPCSignals
     boost::signals2::signal<void ()> Stopped;
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
     boost::signals2::signal<void (const CRPCCommand&)> PostCommand;
+    boost::signals2::signal<void ()> StartShutdown;
 } g_rpcSignals;
 
 void RPCServer::OnStarted(boost::function<void ()> slot)
@@ -74,6 +78,11 @@ void RPCServer::OnPreCommand(boost::function<void (const CRPCCommand&)> slot)
 void RPCServer::OnPostCommand(boost::function<void (const CRPCCommand&)> slot)
 {
     g_rpcSignals.PostCommand.connect(boost::bind(slot, _1));
+}
+
+void RPCServer::OnStartShutdown(boost::function<void ()> slot)
+{
+    g_rpcSignals.StartShutdown.connect(slot);
 }
 
 void RPCServer::AddCommand(const CRPCCommand& cmd)
@@ -213,10 +222,16 @@ Value stop(const Array& params, bool fHelp)
             "stop\n"
             "\nStop Bitcoin server.");
     // Shutdown will take long enough that the response should get back
-    StartShutdown();
+    g_rpcSignals.StartShutdown();
     return "Bitcoin server stopping";
 }
 
+
+CRPCTable::CRPCTable()
+{
+    insert(CRPCCommand("control", "help", &::help, true, false));
+    insert(CRPCCommand("control", "stop", &::stop, true, false));
+}
 
 void CRPCTable::insert(const CRPCCommand& cmd)
 {
@@ -415,7 +430,7 @@ void StartRPCThreads()
                 uiInterface.ThreadSafeMessageBox(
                     strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
                     "", CClientUIInterface::MSG_ERROR);
-                StartShutdown();
+                g_rpcSignals.StartShutdown();
                 return;
             }
             rpc_allow_subnets.push_back(subnet);
@@ -452,7 +467,7 @@ void StartRPCThreads()
                 GetConfigFile().string(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
                 "", CClientUIInterface::MSG_ERROR);
-        StartShutdown();
+        g_rpcSignals.StartShutdown();
         return;
     }
 
@@ -503,7 +518,7 @@ void StartRPCThreads()
                 uiInterface.ThreadSafeMessageBox(
                     strprintf(_("Could not parse -rpcbind value %s as network address"), addr),
                     "", CClientUIInterface::MSG_ERROR);
-                StartShutdown();
+                g_rpcSignals.StartShutdown();
                 return;
             }
         }
@@ -552,7 +567,7 @@ void StartRPCThreads()
 
     if (!fListening) {
         uiInterface.ThreadSafeMessageBox(strerr, "", CClientUIInterface::MSG_ERROR);
-        StartShutdown();
+        g_rpcSignals.StartShutdown();
         return;
     }
 

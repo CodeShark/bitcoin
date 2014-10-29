@@ -25,6 +25,7 @@ namespace RPCServer
     void OnStopped(boost::function<void ()> slot);
     void OnPreCommand(boost::function<void (const CRPCCommand&)> slot);
     void OnPostCommand(boost::function<void (const CRPCCommand&)> slot);
+    void OnStartShutdown(boost::function<void ()> slot);
 
     void AddCommand(const CRPCCommand& cmd);
 }
@@ -103,7 +104,7 @@ private:
     std::map<std::string, CRPCCommand> mapCommands;
 
 public:
-    //CRPCTable();
+    CRPCTable();
     void insert(const CRPCCommand& cmd);
     const CRPCCommand* operator[](std::string name) const;
     std::string help(std::string name) const;
