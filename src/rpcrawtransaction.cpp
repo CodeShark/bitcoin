@@ -18,6 +18,7 @@
 #include "script/standard.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
+#include "rpcwallet.h"
 #include "wallet.h"
 #endif
 

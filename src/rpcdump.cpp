@@ -5,6 +5,7 @@
 #include "base58.h"
 #include "rpcserver.h"
 #include "rpcdump.h"
+#include "rpcutils.h"
 #include "init.h"
 #include "main.h"
 #include "script/script.h"

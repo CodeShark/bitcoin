@@ -7,6 +7,7 @@
 #include "core_io.h"
 #include "rpcserver.h"
 #include "rpcwallet.h"
+#include "rpcutils.h"
 #include "init.h"
 #include "net.h"
 #include "netbase.h"
