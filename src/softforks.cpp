@@ -46,7 +46,7 @@ bool SoftForks::UseRule(Rule rule, const CBlockIndex& blockIndex)
 
     case BIP66:
         // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded:
-        return blockIndex.nHeight >= 358806;
+        return (blockIndex.nHeight >= 358806 && blockIndex.GetAncestor(358806)->GetBlockHash() == uint256S("00000000000000000fb122c91c210b3060fff913e483711f25bfb35d1d63537b"));
 
     case BIP68:
         return false;
