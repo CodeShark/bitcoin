@@ -24,7 +24,7 @@
 #include "script/script.h"
 #include "script/sigcache.h"
 #include "script/standard.h"
-#include "softforks.h"
+#include "softforkrules.h"
 #include "tinyformat.h"
 #include "txdb.h"
 #include "txmempool.h"

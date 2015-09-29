@@ -134,6 +134,7 @@ BITCOIN_CORE_H = \
   script/standard.h \
   serialize.h \
   softforks.h \
+  softforkrules.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -195,6 +196,7 @@ libbitcoin_server_a_SOURCES = \
   rpcserver.cpp \
   script/sigcache.cpp \
   softforks.cpp \
+  softforkrules.cpp \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
