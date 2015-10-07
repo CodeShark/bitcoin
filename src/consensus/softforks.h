@@ -17,6 +17,23 @@ namespace SoftForks {
  */
 bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 
+enum Rule
+{
+    BIP16,
+    BIP30,
+    BIP34,
+    BIP42,
+    BIP62,
+    BIP65,
+    BIP66,
+    BIP68,
+    BIP112,
+    BIP113
+};
+
+bool IsValidVersion(const CBlockIndex& blockIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
+bool UseRule(Rule rule, const CBlockIndex& blockIndex, const Consensus::Params& consensusParams, CBlockIndex* pindexPrev = NULL);
+
 }
 }
 
