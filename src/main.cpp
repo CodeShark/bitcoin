@@ -2655,16 +2655,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.Invalid(error("%s: block's timestamp is too early", __func__),
                              REJECT_INVALID, "time-too-old");
 
-    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && Consensus::SoftForks::IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
-
-    // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 3 && Consensus::SoftForks::IsSuperMajority(3, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
-
+    // The following replaces explicit calls to SoftForks::IsSuperMajority()
+    // For details look in consensus/softforks.cpp
+    if (!Consensus::SoftForks::IsValidVersion(block, consensusParams, pindexPrev))
+        return state.Invalid(error("%s: rejected nVersion=%d block", __func__, block.nVersion),
+                             REJECT_INVALID, "bad-version");
     return true;
 }
 
