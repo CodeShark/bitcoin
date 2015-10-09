@@ -21,6 +21,7 @@ class CBlockHeader
 {
 public:
     // header
+    // DEPLOY BIP65 - change version to 4. For versionbits we'll call the softforks unit to get default.
     static const int32_t CURRENT_VERSION=3;
     int32_t nVersion;
     uint256 hashPrevBlock;
