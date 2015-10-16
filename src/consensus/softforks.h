@@ -24,6 +24,7 @@ enum Rule
     BIP68,
     BIP112,
     BIP113,
+    BIP9999,
 };
 
 enum VersionStatus { VALID, UNRECOGNIZED, INVALID };

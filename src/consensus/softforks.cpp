@@ -152,6 +152,9 @@ const char* Consensus::SoftForks::GetRuleName(int rule)
     case BIP113:
         return "BIP113";
 
+    case BIP9999:
+        return "BIP9999";
+
     default:
         return "N/A";
     }
