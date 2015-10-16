@@ -7,6 +7,7 @@
 #define BITCOIN_CONSENSUS_PARAMS_H
 
 #include "uint256.h"
+#include "versionbits.h"
 
 namespace Consensus {
 /**
@@ -19,6 +20,8 @@ struct Params {
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
     int nMajorityWindow;
+    /** Used for versionbits */
+    VersionBits::SoftForkDeployments softForkDeployments;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;

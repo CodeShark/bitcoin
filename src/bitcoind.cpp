@@ -5,6 +5,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
+#include "consensus/blockruleindex.h"
 #include "rpcserver.h"
 #include "init.h"
 #include "noui.h"
@@ -111,6 +112,11 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
             return false;
         }
+
+        // Initialize block rule index for versionbits support
+        const Consensus::Params& consensusParams = Params().GetConsensus();
+        Consensus::VersionBits::GetBlockRuleIndex().SetSoftForkDeployments(
+            consensusParams.DifficultyAdjustmentInterval(), &consensusParams.softForkDeployments);
 
         // Command-line RPC
         bool fCommandLine = false;
