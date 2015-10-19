@@ -8,7 +8,10 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "coins.h"
+#include "consensus/blockruleindex.h"
+#include "consensus/softforks.h"
 #include "consensus/validation.h"
+#include "consensus/versionbits.h"
 #include "main.h"
 #include "primitives/transaction.h"
 #include "rpcserver.h"
@@ -595,6 +598,26 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     return rv;
 }
 
+static UniValue VersionBitsDesc(const CBlockIndex* pindex)
+{
+    using namespace Consensus::SoftForks; 
+    using namespace Consensus::VersionBits;
+
+    UniValue rv(UniValue::VARR);
+
+    RuleStates ruleStates = GetBlockRuleIndex().GetRuleStates(pindex);
+    RuleStates::const_iterator it = ruleStates.begin();
+    for (; it != ruleStates.end(); ++it)
+    {
+        UniValue deployment(UniValue::VOBJ);
+        deployment.push_back(Pair("id", GetRuleName(it->first)));
+        deployment.push_back(Pair("status", GetRuleStateText(it->second)));
+        rv.push_back(deployment);
+    }
+
+    return rv;
+}
+
 UniValue getblockchaininfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -649,6 +672,7 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     obj.push_back(Pair("softforks",             softforks));
+    obj.push_back(Pair("versionbits",           VersionBitsDesc(tip)));
 
     if (fPruneMode)
     {
