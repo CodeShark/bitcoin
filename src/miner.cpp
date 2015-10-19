@@ -9,6 +9,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
+#include "consensus/blockruleindex.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "hash.h"
@@ -108,11 +109,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
-    // -regtest only: allow overriding block.nVersion with
-    // -blockversion=N to test forking scenarios
-    if (Params().MineBlocksOnDemand())
-        pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
-
     // Create coinbase tx
     CMutableTransaction txNew;
     txNew.vin.resize(1);
@@ -148,6 +144,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
+
+        // -regtest only: allow overriding block.nVersion with
+        // -blockversion=N to test forking scenarios
+        if (Params().MineBlocksOnDemand())
+            pblock->nVersion = GetArg("-blockversion",
+                Consensus::VersionBits::GetBlockRuleIndex().CreateBlockVersion(pblock->nTime, chainActive.Tip()->pprev));
+
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
