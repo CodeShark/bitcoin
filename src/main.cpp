@@ -11,6 +11,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "consensus/blockruleindex.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "hash.h"
@@ -2432,6 +2433,9 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
 
     setDirtyBlockIndex.insert(pindexNew);
 
+    // Insert into versionbits block rule index and compute soft fork deployment states
+    Consensus::VersionBits::GetBlockRuleIndex().InsertBlockIndex(pindexNew);
+
     return pindexNew;
 }
 
@@ -3109,6 +3113,9 @@ bool static LoadBlockIndexDB()
             pindex->BuildSkip();
         if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == NULL || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
             pindexBestHeader = pindex;
+
+        // Insert into versionbits block rule index and recompute soft fork deployment states for chain
+        Consensus::VersionBits::GetBlockRuleIndex().InsertBlockIndex(pindex);
     }
 
     // Load block file info
