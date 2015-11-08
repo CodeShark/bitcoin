@@ -210,6 +210,16 @@ bool CScript::IsPayToScriptHash() const
             (*this)[22] == OP_EQUAL);
 }
 
+// A witness program is any valid CScript that consists of a single push of 2 to 40 bytes.
+bool CScript::IsWitnessProgram(std::vector<unsigned char>& program) const
+{
+    if (this->size() >= 3 && this->size() <= 41 && (size_t)((*this)[0] + 1) == this->size()) {
+        program = std::vector<unsigned char>(this->begin() + 1, this->end());
+        return true;
+    }
+    return false;
+}
+
 bool CScript::IsPushOnly(const_iterator pc) const
 {
     while (pc < end())
