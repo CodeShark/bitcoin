@@ -324,7 +324,7 @@ public:
     const int32_t nVersion;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const CTxWitness wit;
+    CTxWitness wit;
     const uint32_t nLockTime;
 
     /** Construct a CTransaction that qualifies as IsNull() */
