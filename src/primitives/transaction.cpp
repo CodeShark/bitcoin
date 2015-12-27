@@ -74,7 +74,7 @@ void CTransaction::UpdateHash() const
 
 uint256 CTransaction::GetWitnessHash() const
 {
-    return SerializeHash(wit.vwit, SER_GETHASH, SERIALIZE_TRANSACTION_WITNESS);
+    return SerializeHash(wit.vtxinwit, SER_GETHASH, SERIALIZE_TRANSACTION_WITNESS);
 }
 
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }

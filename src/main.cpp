@@ -1593,7 +1593,7 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    const CScriptWitness *witness = (nIn < ptxTo->wit.vwit.size()) ? &ptxTo->wit.vwit[nIn].scriptWitness : NULL;
+    const CScriptWitness *witness = (nIn < ptxTo->wit.vtxinwit.size()) ? &ptxTo->wit.vtxinwit[nIn].scriptWitness : NULL;
     if (!VerifyScript(scriptSig, scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
         return false;
     }
@@ -3187,16 +3187,16 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
         if (malleated) {
             return state.DoS(100, error("%s : witness merkle root duplication", REJECT_INVALID, "bad-witness-duplicate", true));
         }
-        if (block.vtx[0].wit.vwit.size() == 0 || block.vtx[0].wit.vwit[0].scriptWitness.stack.size() != 1) {
+        if (block.vtx[0].wit.vtxinwit.size() == 0 || block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.size() != 1) {
              return state.DoS(100, error("%s : invalid witness merkle path length", __func__), REJECT_INVALID, "bad-witness-merkle-len", true);
         }
-        if (!CheckCoinbaseCommitment(block.vtx[0].vin[0].scriptSig, hashWitness, block.vtx[0].wit.vwit[0].scriptWitness.stack[0], vTypeWitnessCommitment)) {
+        if (!CheckCoinbaseCommitment(block.vtx[0].vin[0].scriptSig, hashWitness, block.vtx[0].wit.vtxinwit[0].scriptWitness.stack[0], vTypeWitnessCommitment)) {
             return state.DoS(100, error("%s : witness merkle commitment mismatch", __func__), REJECT_INVALID, "bad-witness-merkle-match", true);
         }
     } else {
         // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room from spam.
         for (size_t i = 0; i < block.vtx.size(); i++) {
-            if (block.vtx[i].wit.vwit.size() > 0) {
+            if (block.vtx[i].wit.vtxinwit.size() > 0) {
                 return state.DoS(100, error("%s : unexpected witness data found", __func__), REJECT_INVALID, "unexpected-witness", true);
             }
         }

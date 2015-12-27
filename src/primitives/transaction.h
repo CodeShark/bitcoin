@@ -192,8 +192,8 @@ public:
 class CTxWitness
 {
 public:
-    /** In case vwit is missing, all entries are treated as if they were empty CWitnesses */
-    std::vector<CTxinWitness> vwit;
+    /** In case vtxinwit is missing, all entries are treated as if they were empty CTxInWitnesses */
+    std::vector<CTxinWitness> vtxinwit;
 
     ADD_SERIALIZE_METHODS;
 
@@ -202,31 +202,31 @@ public:
     {
         if (ser_action.ForRead()) {
             bool haswitness = false;
-            for (size_t n = 0; n < vwit.size(); n++) {
-                READWRITE(vwit[n]);
-                if (!vwit[n].IsNull()) {
+            for (size_t n = 0; n < vtxinwit.size(); n++) {
+                READWRITE(vtxinwit[n]);
+                if (!vtxinwit[n].IsNull()) {
                     haswitness = true;
                 }
             }
             if (!haswitness) {
-                /* It's illegal to encode a witness when all vwit entries are empty. */
+                /* It's illegal to encode a witness when all vtxinwit entries are empty. */
                 throw std::ios_base::failure("Superfluous witness record");
             }
         } else {
             CTxinWitness witnessDummy;
             /* Write out the witnesses, and write dummies for the missing ones. */
-            for (size_t n = 0; n < vwit.size(); n++) {
-                READWRITE(vwit[n]);
+            for (size_t n = 0; n < vtxinwit.size(); n++) {
+                READWRITE(vtxinwit[n]);
             }
         }
     }
 
-    bool IsEmpty() const { return vwit.empty(); }
+    bool IsEmpty() const { return vtxinwit.empty(); }
 
     bool IsNull() const
     {
-        for (size_t n = 0; n < vwit.size(); n++) {
-            if (!vwit[n].IsNull()) {
+        for (size_t n = 0; n < vtxinwit.size(); n++) {
+            if (!vtxinwit[n].IsNull()) {
                 return false;
             }
         }
