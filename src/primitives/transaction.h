@@ -189,6 +189,51 @@ public:
     bool IsNull() const { return scriptWitness.IsNull(); }
 };
 
+class CTxWitness
+{
+public:
+    /** In case vwit is missing, all entries are treated as if they were empty CWitnesses */
+    std::vector<CTxinWitness> vwit;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        if (ser_action.ForRead()) {
+            bool haswitness = false;
+            for (size_t n = 0; n < vwit.size(); n++) {
+                READWRITE(vwit[n]);
+                if (!vwit[n].IsNull()) {
+                    haswitness = true;
+                }
+            }
+            if (!haswitness) {
+                /* It's illegal to encode a witness when all vwit entries are empty. */
+                throw std::ios_base::failure("Superfluous witness record");
+            }
+        } else {
+            CTxinWitness witnessDummy;
+            /* Write out the witnesses, and write dummies for the missing ones. */
+            for (size_t n = 0; n < vwit.size(); n++) {
+                READWRITE(vwit[n]);
+            }
+        }
+    }
+
+    bool IsEmpty() const { return vwit.empty(); }
+
+    bool IsNull() const
+    {
+        for (size_t n = 0; n < vwit.size(); n++) {
+            if (!vwit[n].IsNull()) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
 struct CMutableTransaction;
 
 /**
@@ -205,7 +250,7 @@ struct CMutableTransaction;
  * - std::vector<CTxIn> vin
  * - std::vector<CTxOut> vout
  * - if (flags & 1):
- *   - CTxinWitness[vin.size()] vwit;
+ *   - CTxWitness wit;
  * - uint32_t nLockTime
  */
 template<typename Stream, typename Operation, typename TxType>
@@ -229,21 +274,8 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
         }
         if ((flags & 1) && (nVersion & SERIALIZE_TRANSACTION_WITNESS)) {
             /* The witness flag is present, and we support witnesses. */
-            bool haswitness = false;
             flags ^= 1;
-            tx.vwit.resize(tx.vin.size());
-            for (size_t n = 0; n < tx.vin.size(); n++) {
-                READWRITE(tx.vwit[n]);
-                if (!tx.vwit[n].IsNull()) {
-                    haswitness = true;
-                }
-            }
-            if (!haswitness) {
-                /* It's illegal to encode a witness when all vwit entries are empty. */
-                throw std::ios_base::failure("Superfluous witness record");
-            }
-        } else {
-            tx.vwit.clear();
+            READWRITE(tx.wit);
         }
         if (flags) {
             /* Unknown flag in the serialization */
@@ -252,11 +284,8 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
     } else {
         if (nVersion & SERIALIZE_TRANSACTION_WITNESS) {
             /* Check whether witnesses need to be serialized. */
-            for (size_t n = 0; n < tx.vwit.size(); n++) {
-                if (!tx.vwit[n].IsNull()) {
-                    flags |= 1;
-                    break;
-                }
+            if (tx.wit.IsNull()) {
+                flags |= 1;
             }
         }
         if (flags) {
@@ -268,15 +297,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
         READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
         READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
         if (flags & 1) {
-            CTxinWitness witnessDummy;
-            /* Write out the witnesses, and write dummies for the missing ones. */
-            for (size_t n = 0; n < tx.vin.size(); n++) {
-                if (n < tx.vwit.size()) {
-                    READWRITE(tx.vwit[n]);
-                } else {
-                    READWRITE(witnessDummy);
-                }
-            }
+            READWRITE(tx.wit);
         }
     }
     READWRITE(*const_cast<uint32_t*>(&tx.nLockTime));
@@ -303,8 +324,7 @@ public:
     const int32_t nVersion;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    /** In case vwit is missing, all entries are treated as if they were empty CWitnesses */
-    std::vector<CTxinWitness> vwit;
+    const CTxWitness wit;
     const uint32_t nLockTime;
 
     /** Construct a CTransaction that qualifies as IsNull() */
@@ -371,7 +391,7 @@ struct CMutableTransaction
     int32_t nVersion;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    std::vector<CTxinWitness> vwit;
+    CTxWitness wit;
     uint32_t nLockTime;
 
     CMutableTransaction();
