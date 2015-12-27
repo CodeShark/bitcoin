@@ -189,8 +189,8 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     SignatureData data;
     assert(tx.vin.size() > nIn);
     data.scriptSig = tx.vin[nIn].scriptSig;
-    if (tx.vwit.size() > nIn) {
-        data.scriptWitness = tx.vwit[nIn].scriptWitness;
+    if (tx.wit.vwit.size() > nIn) {
+        data.scriptWitness = tx.wit.vwit[nIn].scriptWitness;
     }
     return data;
 }
@@ -199,9 +199,9 @@ void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const Signatur
 {
     assert(tx.vin.size() > nIn);
     tx.vin[nIn].scriptSig = data.scriptSig;
-    if (!data.scriptWitness.IsNull() || tx.vwit.size() > nIn) {
-        tx.vwit.resize(tx.vin.size());
-        tx.vwit[nIn].scriptWitness = data.scriptWitness;
+    if (!data.scriptWitness.IsNull() || tx.wit.vwit.size() > nIn) {
+        tx.wit.vwit.resize(tx.vin.size());
+        tx.wit.vwit[nIn].scriptWitness = data.scriptWitness;
     }
 }
 

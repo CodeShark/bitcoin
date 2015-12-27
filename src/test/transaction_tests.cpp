@@ -332,7 +332,7 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     outputm.vin.resize(1);
     outputm.vin[0].prevout.SetNull();
     outputm.vin[0].scriptSig = CScript();
-    outputm.vwit.resize(1);
+    outputm.wit.vwit.resize(1);
     outputm.vout.resize(1);
     outputm.vout[0].nValue = 1;
     outputm.vout[0].scriptPubKey = outscript;
@@ -343,14 +343,14 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     assert(output.vin[0] == outputm.vin[0]);
     assert(output.vout.size() == 1);
     assert(output.vout[0] == outputm.vout[0]);
-    assert(output.vwit.size() == 0);
+    assert(output.wit.vwit.size() == 0);
 
     CMutableTransaction inputm;
     inputm.nVersion = 1;
     inputm.vin.resize(1);
     inputm.vin[0].prevout.hash = output.GetHash();
     inputm.vin[0].prevout.n = 0;
-    inputm.vwit.resize(1);
+    inputm.wit.vwit.resize(1);
     inputm.vout.resize(1);
     inputm.vout[0].nValue = 1;
     inputm.vout[0].scriptPubKey = CScript();
@@ -363,11 +363,11 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     assert(input.vin[0] == inputm.vin[0]);
     assert(input.vout.size() == 1);
     assert(input.vout[0] == inputm.vout[0]);
-    if (inputm.vwit[0].IsNull()) {
-        assert(input.vwit.size() == 0 || input.vwit[0].IsNull());
+    if (inputm.wit.vwit[0].IsNull()) {
+        assert(input.wit.vwit.size() == 0 || input.wit.vwit[0].IsNull());
     } else {
-        assert(input.vwit.size() == 1);
-        assert(input.vwit[0].scriptWitness.stack == inputm.vwit[0].scriptWitness.stack);
+        assert(input.wit.vwit.size() == 1);
+        assert(input.wit.vwit[0].scriptWitness.stack == inputm.wit.vwit[0].scriptWitness.stack);
     }
 }
 
@@ -375,7 +375,7 @@ void CheckWithFlag(const CTransaction& output, const CMutableTransaction& input,
 {
     ScriptError error;
     CTransaction inputi(input);
-    bool ret = VerifyScript(inputi.vin[0].scriptSig, output.vout[0].scriptPubKey, inputi.vwit.size() > 0 ? &inputi.vwit[0].scriptWitness : NULL, flags, TransactionSignatureChecker(&inputi, 0), &error);
+    bool ret = VerifyScript(inputi.vin[0].scriptSig, output.vout[0].scriptPubKey, inputi.wit.vwit.size() > 0 ? &inputi.wit.vwit[0].scriptWitness : NULL, flags, TransactionSignatureChecker(&inputi, 0), &error);
     assert(ret == success);
 }
 
