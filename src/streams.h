@@ -63,7 +63,7 @@ OverrideStream<S> WithOrVersion(S* s, int nVersionFlag)
 class CDataStream
 {
 protected:
-    typedef CSerializeData vector_type;
+    typedef std::vector<char> vector_type;
     vector_type vch;
     unsigned int nReadPos;
 public:
@@ -102,10 +102,10 @@ public:
         Init(nTypeIn, nVersionIn);
     }
 
-    CDataStream(const std::vector<char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
+    /*CDataStream(const std::vector<char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
         Init(nTypeIn, nVersionIn);
-    }
+    }*/
 
     CDataStream(const std::vector<unsigned char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
