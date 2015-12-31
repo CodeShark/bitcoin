@@ -13,6 +13,10 @@
 #include "script/script.h"
 #include "uint256.h"
 
+#include "streams.h"
+#include "utilstrencodings.h"
+#include <iostream>
+
 using namespace std;
 
 typedef vector<unsigned char> valtype;
@@ -836,6 +840,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         return false;
                     }
                     bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
+                    std::cout << "CheckSig " << (fSuccess ? "succeeded" : "failed") << std::endl;
 
                     popstack(stack);
                     popstack(stack);
@@ -1074,29 +1079,41 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         uint256 hashOutputs;
 
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
+            CDataStream ds(SER_GETHASH, 0);
             CHashWriter ss(SER_GETHASH, 0);
+            ds << (uint32_t)(txTo.vin.size());
             ss << (uint32_t)(txTo.vin.size());
             for (unsigned int n = 0; n < txTo.vin.size(); n++) {
+                ds << txTo.vin[n].prevout;
                 ss << txTo.vin[n].prevout;
             }
+            std::cout << "prevouts: " << HexStr(ds.begin(), ds.end()) << std::endl;
             hashPrevouts = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
         }
 
         if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
+            CDataStream ds(SER_GETHASH, 0);
             CHashWriter ss(SER_GETHASH, 0);
+            ds << (uint32_t)(txTo.vin.size());
             ss << (uint32_t)(txTo.vin.size());
             for (unsigned int n = 0; n < txTo.vin.size(); n++) {
+                ds << txTo.vin[n].nSequence;
                 ss << txTo.vin[n].nSequence;
             }
+            std::cout << "sequence: " << HexStr(ds.begin(), ds.end()) << std::endl;
             hashSequence = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
         }
 
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
+            CDataStream ds(SER_GETHASH, 0);
             CHashWriter ss(SER_GETHASH, 0);
+            ds << (uint32_t)(txTo.vout.size());
             ss << (uint32_t)(txTo.vout.size());
             for (unsigned int n = 0; n < txTo.vout.size(); n++) {
+                ds << txTo.vout[n];
                 ss << txTo.vout[n];
             }
+            std::cout << "outputs: " << HexStr(ds.begin(), ds.end()) << std::endl;
             hashOutputs = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
@@ -1105,26 +1122,40 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
             hashOutputs = ss.GetHash();
         }
 
+        CDataStream ds(SER_GETHASH, 0);
         CHashWriter ss(SER_GETHASH, 0);
         // Version
+        ds << txTo.nVersion;
         ss << txTo.nVersion;
         // Input prevouts/nSequence (none/all, depending on flags)
+        ds << hashPrevouts;
         ss << hashPrevouts;
+        ds << hashSequence;
         ss << hashSequence;
         // The input being signed (replacing the scriptSig with scriptCode + amount)
         // The prevout may already be contained in hashPrevout, and the nSequence
         // may already be contain in hashSequence.
+        ds << txTo.vin[nIn].prevout;
         ss << txTo.vin[nIn].prevout;
+        ds << (uint32_t)(scriptCode.size());
         ss << (uint32_t)(scriptCode.size());
+        ds.write((const char*)&scriptCode[0], scriptCode.size());
         ss.write((const char*)&scriptCode[0], scriptCode.size());
+        ds << amount;
         ss << amount;
+        ds << txTo.vin[nIn].nSequence;
         ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
+        ds << hashOutputs;
         ss << hashOutputs;
         // Locktime
+        ds << txTo.nLockTime;
         ss << txTo.nLockTime;
         // Sighash type
+        ds << nHashType;
         ss << nHashType;
+
+        std::cout << "data to hash: " << HexStr(ds.begin(), ds.end()) << std::endl;
 
         return ss.GetHash();
     }
