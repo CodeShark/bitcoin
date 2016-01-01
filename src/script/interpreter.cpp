@@ -1075,7 +1075,6 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
         if (!(nHashType & SIGHASH_ANYONECANPAY)) {
             CHashWriter ss(SER_GETHASH, 0);
-            ss << (uint32_t)(txTo.vin.size());
             for (unsigned int n = 0; n < txTo.vin.size(); n++) {
                 ss << txTo.vin[n].prevout;
             }
@@ -1084,7 +1083,6 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
         if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             CHashWriter ss(SER_GETHASH, 0);
-            ss << (uint32_t)(txTo.vin.size());
             for (unsigned int n = 0; n < txTo.vin.size(); n++) {
                 ss << txTo.vin[n].nSequence;
             }
@@ -1093,14 +1091,12 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
 
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             CHashWriter ss(SER_GETHASH, 0);
-            ss << (uint32_t)(txTo.vout.size());
             for (unsigned int n = 0; n < txTo.vout.size(); n++) {
                 ss << txTo.vout[n];
             }
             hashOutputs = ss.GetHash(); // TODO: cache this value for all signatures in a transaction
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
             CHashWriter ss(SER_GETHASH, 0);
-            ss << ((uint32_t)1);
             ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
         }
@@ -1115,8 +1111,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
         // The prevout may already be contained in hashPrevout, and the nSequence
         // may already be contain in hashSequence.
         ss << txTo.vin[nIn].prevout;
-        ss << (uint32_t)(scriptCode.size());
-        ss.write((const char*)&scriptCode[0], scriptCode.size());
+        ss << static_cast<const CScriptBase&>(scriptCode);
         ss << amount;
         ss << txTo.vin[nIn].nSequence;
         // Outputs (none/one/all, depending on flags)
