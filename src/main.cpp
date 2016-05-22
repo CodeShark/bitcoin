@@ -4615,7 +4615,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             boost::this_thread::interruption_point();
             it++;
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_WITNESS_BLOCK)
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_WITNESS_BLOCK || inv.type == MSG_FILTERED_WITNESS_BLOCK)
             {
                 bool send = false;
                 BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
@@ -4665,7 +4665,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         if (pfrom->pfilter)
                         {
                             CMerkleBlock merkleBlock(block, *pfrom->pfilter);
-                            pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
+                            pfrom->PushMessageWithFlag(inv.HasWitness() ? SERIALIZE_TRANSACTION_WITNESS : 0, NetMsgType::MERKLEBLOCK, merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
                             // Note that there is currently no way for a node to request any single transactions we didn't send here -
@@ -4674,7 +4674,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             // however we MUST always provide at least what the remote peer needs
                             typedef std::pair<unsigned int, uint256> PairType;
                             BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
-                                pfrom->PushMessage(NetMsgType::TX, block.vtx[pair.first]);
+                                pfrom->PushMessageWithFlag(inv.HasWitness() ? SERIALIZE_TRANSACTION_WITNESS : 0, NetMsgType::TX, block.vtx[pair.first]);
                         }
                         // else
                             // no response

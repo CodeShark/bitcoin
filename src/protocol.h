@@ -316,6 +316,7 @@ public:
 
     friend bool operator<(const CInv& a, const CInv& b);
 
+    bool HasWitness() const { return type & MSG_WITNESS_FLAG; }
     std::string GetCommand() const;
     std::string ToString() const;
 
