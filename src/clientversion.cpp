@@ -110,3 +110,8 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     ss << "/";
     return ss.str();
 }
+
+bool IsDevelopmentBranch()
+{
+    return std::string(BRANCH_NAME) == "master";
+}

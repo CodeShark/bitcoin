@@ -7,6 +7,7 @@
 #include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
+#include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "core_io.h"
@@ -371,6 +372,10 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             + HelpExampleCli("getblocktemplate", "")
             + HelpExampleRpc("getblocktemplate", "")
          );
+
+    const CChainParams& chainParams = Params();
+    if (!chainParams.MineOnDevelopmentBranch() && IsDevelopmentBranch())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     LOCK(cs_main);
 

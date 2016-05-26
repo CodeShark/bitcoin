@@ -135,6 +135,7 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
+        fMineOnDevelopmentBranch = false;
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -225,6 +226,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
+        fMineOnDevelopmentBranch = true;
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -294,6 +296,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
+        fMineOnDevelopmentBranch = true;
 
         // checkpointData is empty
     }
@@ -350,6 +353,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
+        fMineOnDevelopmentBranch = true;
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
