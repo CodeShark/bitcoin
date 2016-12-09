@@ -154,4 +154,42 @@ public:
     }
 };
 
+/**
+ * Used to relay blocks as header + vector<merkle branch> + vector<witness merkle branch>
+ * to filtered nodes.
+ */
+class CWitnessMerkleBlock
+{
+public:
+    /** Public only for unit testing */
+    CBlockHeader header;
+    CPartialMerkleTree txidTree;
+    CPartialMerkleTree wtxidTree;
+
+public:
+    /** Public only for unit testing and relay testing (not relayed) */
+    std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
+
+    /**
+     * Create from a CBlock, filtering transactions according to filter
+     * Note that this will call IsRelevantAndUpdate on the filter for each transaction,
+     * thus the filter will likely be modified.
+     */
+    CWitnessMerkleBlock(const CBlock& block, CBloomFilter& filter);
+
+    // Create from a CBlock, matching the txids in the set
+    CWitnessMerkleBlock(const CBlock& block, const std::set<uint256>& txids);
+
+    CWitnessMerkleBlock() {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(header);
+        READWRITE(txidTree);
+        READWRITE(wtxidTree);
+    }
+};
+
 #endif // BITCOIN_MERKLEBLOCK_H
