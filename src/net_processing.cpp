@@ -904,7 +904,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             boost::this_thread::interruption_point();
             it++;
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK)
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_WITNESS_BLOCK || inv.type == MSG_FILTERED_WITNESS_BLOCK)
             {
                 bool send = false;
                 BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
@@ -928,7 +928,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // disconnect node in case we have reached the outbound limit for serving historical blocks
                 // never disconnect whitelisted nodes
                 static const int nOneWeek = 7 * 24 * 60 * 60; // assume > 1 week = historical
-                if (send && connman.OutboundTargetReached(true) && ( ((pindexBestHeader != NULL) && (pindexBestHeader->GetBlockTime() - mi->second->GetBlockTime() > nOneWeek)) || inv.type == MSG_FILTERED_BLOCK) && !pfrom->fWhitelisted)
+                if (send && connman.OutboundTargetReached(true) && ( ((pindexBestHeader != NULL) && (pindexBestHeader->GetBlockTime() - mi->second->GetBlockTime() > nOneWeek)) || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_FILTERED_WITNESS_BLOCK) && !pfrom->fWhitelisted)
                 {
                     LogPrint("net", "historical block serving limit reached, disconnect peer=%d\n", pfrom->GetId());
 
@@ -973,6 +973,21 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         }
                         // else
                             // no response
+                    }
+                    else if (inv.type == MSG_FILTERED_WITNESS_BLOCK)
+                    {
+                        bool sendMerkleBlock = false;
+                        CWitnessMerkleBlock merkleBlock;
+                        {
+                            LOCK(pfrom->cs_filter);
+                            if (pfrom->pfilter) {
+                                sendMerkleBlock = true;
+                                merkleBlock = CWitnessMerkleBlock(block, *pfrom->pfilter);
+                            }
+                        }
+                        if (sendMerkleBlock) {
+                            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::WMERKLEBLOCK, merkleBlock));
+                        }
                     }
                     else if (inv.type == MSG_CMPCT_BLOCK)
                     {
