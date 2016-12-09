@@ -60,6 +60,69 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
     txn = CPartialMerkleTree(vHashes, vMatch);
 }
 
+CWitnessMerkleBlock::CWitnessMerkleBlock(const CBlock& block, CBloomFilter& filter)
+{
+    header = block.GetBlockHeader();
+
+    vector<bool> vMatch;
+    vector<uint256> vTxids;
+    vector<uint256> vWtxids;
+
+    vMatch.reserve(block.vtx.size());
+    vTxids.reserve(block.vtx.size());
+    vWtxids.reserve(block.vtx.size());
+
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    {
+        const uint256& txid = block.vtx[i]->GetHash();
+        const uint256& wtxid = (i == 0 ? uint256() : block.vtx[i]->GetWitnessHash());
+
+        // The witness commitment is in the coinbase transaction so we must include it if we're using wtxids.
+        if (i == 0 || filter.IsRelevantAndUpdate(*block.vtx[i]))
+        {
+            vMatch.push_back(true);
+            vMatchedTxn.push_back(make_pair(i, txid));
+        }
+        else
+            vMatch.push_back(false);
+        vTxids.push_back(txid);
+        vWtxids.push_back(wtxid);
+    }
+
+    txidTree = CPartialMerkleTree(vTxids, vMatch);
+    wtxidTree = CPartialMerkleTree(vWtxids, vMatch);
+}
+
+CWitnessMerkleBlock::CWitnessMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
+{
+    header = block.GetBlockHeader();
+
+    vector<bool> vMatch;
+    vector<uint256> vTxids;
+    vector<uint256> vWtxids;
+
+    vMatch.reserve(block.vtx.size());
+    vTxids.reserve(block.vtx.size());
+    vWtxids.reserve(block.vtx.size());
+
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    {
+        const uint256& txid = block.vtx[i]->GetHash();
+        const uint256& wtxid = (i == 0 ? uint256() : block.vtx[i]->GetWitnessHash());
+
+        // The witness commitment is in the coinbase transaction so we must include it if we're using wtxids.
+        if (i == 0 || txids.count(txid))
+            vMatch.push_back(true);
+        else
+            vMatch.push_back(false);
+        vTxids.push_back(txid);
+        vWtxids.push_back(wtxid);
+    }
+
+    txidTree = CPartialMerkleTree(vTxids, vMatch);
+    wtxidTree = CPartialMerkleTree(vWtxids, vMatch);
+}
+
 uint256 CPartialMerkleTree::CalcHash(int height, unsigned int pos, const std::vector<uint256> &vTxid) {
     if (height == 0) {
         // hash at height 0 is the txids themself
