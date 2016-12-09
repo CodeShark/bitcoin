@@ -105,6 +105,13 @@ extern const char *GETDATA;
  */
 extern const char *MERKLEBLOCK;
 /**
+ * The wmerkleblock message is a reply to a getdata message which requested a
+ * block using the inventory type MSG_FILTERED_MERKLE_BLOCK
+ * @since protocol version <version> as described by <BIP number>. TODO: Specify version and BIP number
+ * @see https://bitcoin.org/en/developer-reference#merkleblock
+ */
+extern const char *WMERKLEBLOCK;
+/**
  * The getblocks message requests an inv message that provides block header
  * hashes starting from a particular point in the block chain.
  * @see https://bitcoin.org/en/developer-reference#getblocks

@@ -19,6 +19,7 @@ const char *ADDR="addr";
 const char *INV="inv";
 const char *GETDATA="getdata";
 const char *MERKLEBLOCK="merkleblock";
+const char *WMERKLEBLOCK="wmerkleblock";
 const char *GETBLOCKS="getblocks";
 const char *GETHEADERS="getheaders";
 const char *TX="tx";
@@ -51,6 +52,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::INV,
     NetMsgType::GETDATA,
     NetMsgType::MERKLEBLOCK,
+    NetMsgType::WMERKLEBLOCK,
     NetMsgType::GETBLOCKS,
     NetMsgType::GETHEADERS,
     NetMsgType::TX,
