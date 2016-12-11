@@ -154,4 +154,42 @@ public:
     }
 };
 
+/**
+ * Used to relay blocks as header + coinbase merkle branch
+ * + wtxid partial merkle tree + transactions including coinbase
+ * to filtered nodes.
+ */
+class CWitnessMerkleBlock
+{
+public:
+    /** Public only for unit testing */
+    CBlockHeader header;
+    CPartialMerkleTree coinbaseTree;
+    CPartialMerkleTree wtxidTree;
+    std::vector<CTransactionRef> vtx;
+
+public:
+    /**
+     * Create from a CBlock, filtering transactions according to filter
+     * Note that this will call IsRelevantAndUpdate on the filter for each transaction,
+     * thus the filter will likely be modified.
+     */
+    CWitnessMerkleBlock(const CBlock& block, CBloomFilter& filter);
+
+    // Create from a CBlock, matching the txids in the set
+    CWitnessMerkleBlock(const CBlock& block, const std::set<uint256>& txids);
+
+    CWitnessMerkleBlock() {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(header);
+        READWRITE(coinbaseTree);
+        READWRITE(wtxidTree);
+        READWRITE(vtx);
+    }
+};
+
 #endif // BITCOIN_MERKLEBLOCK_H
